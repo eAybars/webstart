@@ -13,6 +13,7 @@
         <module>ws-jnlp</module>
         <module>ws-file</module>
         <module>ws-file-monitor</module>
+        <module>ws-app-file-monitoring</module>
     </modules>
 
     <dependencies>

@@ -73,10 +73,9 @@ import javax.servlet.http.HttpServletResponse;
 @WebServlet(urlPatterns = "/"+JnlpDownloadServlet.PATH +"/*")
 public class JnlpDownloadServlet extends HttpServlet {
 
-    public static final String PATH = "webstart";
+    public static final String PATH = "download";
 
     @Inject
-    @SessionScoped
     Instance<Function<String, URL>> resourceSuppliers;
 
     // Localization

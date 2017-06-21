@@ -15,7 +15,9 @@ public interface Component extends Serializable, Comparable<Component> {
 
     String getDescription();
 
-    URL getIconUrl();
+    URI getIcon();
+
+    URL getResource(String path);
 
     @Override
     default int compareTo(Component o){

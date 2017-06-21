@@ -1,19 +1,18 @@
 package net.novalab.webstart.service.application.entity;
 
 import java.net.URI;
-import java.net.URL;
 import java.util.Objects;
 
 /**
  * Created by ertunc on 30/05/17.
  */
-public class SimpleComponent implements Component {
+public abstract class AbstractComponent implements Component {
     private URI identifier;
     private String title;
     private String description;
-    private URL iconUrl;
+    private URI iconUrl;
 
-    public SimpleComponent(URI identifier) {
+    public AbstractComponent(URI identifier) {
         this.identifier = Objects.requireNonNull(identifier);
     }
 
@@ -41,11 +40,11 @@ public class SimpleComponent implements Component {
     }
 
     @Override
-    public URL getIconUrl() {
+    public URI getIcon() {
         return iconUrl;
     }
 
-    public void setIconUrl(URL iconUrl) {
+    public void setIconUrl(URI iconUrl) {
         this.iconUrl = iconUrl;
     }
 
@@ -54,7 +53,7 @@ public class SimpleComponent implements Component {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
 
-        SimpleComponent that = (SimpleComponent) o;
+        AbstractComponent that = (AbstractComponent) o;
 
         return getIdentifier().equals(that.getIdentifier());
     }

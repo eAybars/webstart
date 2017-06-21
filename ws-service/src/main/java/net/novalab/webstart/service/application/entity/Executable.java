@@ -1,9 +1,9 @@
 package net.novalab.webstart.service.application.entity;
 
+import java.net.URI;
 import java.net.URL;
 import java.util.Date;
 import java.util.Properties;
-import java.util.function.Function;
 
 /**
  * Created by ertunc on 29/05/17.
@@ -16,7 +16,5 @@ public interface Executable extends Component {
 
     Date getDateModified();
 
-    URL getExecutable();
-
-    URL getResource(String path);
+    URI getExecutable();
 }

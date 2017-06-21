@@ -16,6 +16,9 @@ hs_err_pid*
 # Maven build folder
 target
 
+# Application servers
+build/servers
+
 *.log
 *.ipr
 *.iws

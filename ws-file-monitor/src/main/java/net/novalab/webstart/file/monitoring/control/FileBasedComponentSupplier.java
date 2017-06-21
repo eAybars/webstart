@@ -1,10 +1,10 @@
 package net.novalab.webstart.file.monitoring.control;
 
-import net.novalab.webstart.file.control.ArtifactRoot;
-import net.novalab.webstart.file.control.ComponentScanner;
+import net.novalab.webstart.file.discovery.control.ArtifactRoot;
+import net.novalab.webstart.file.discovery.control.ComponentScanner;
 import net.novalab.webstart.service.application.controller.ComponentEvent;
 import net.novalab.webstart.service.application.controller.ComponentSupplier;
-import net.novalab.webstart.service.application.controller.EventTypeImpl;
+import net.novalab.webstart.service.application.controller.ComponentEventImpl;
 import net.novalab.webstart.service.application.entity.Component;
 
 import javax.annotation.PostConstruct;
@@ -55,7 +55,7 @@ public class FileBasedComponentSupplier implements ComponentSupplier {
     private volatile List<Component> components = Collections.emptyList();
     private UpdateMonitor monitor;
     private Path root;
-    private Function<File, List<Component>> componentScanner;
+    private Function<File, List<? extends Component>> componentScanner;
 
 
     @Override
@@ -69,7 +69,7 @@ public class FileBasedComponentSupplier implements ComponentSupplier {
         if (artifactRoot.exists() && artifactRoot.isDirectory()) {
             root = artifactRoot.toPath();
             this.componentScanner = componentScanner.andThen(components -> {
-                Event<Component> select = componentEvent.select(new EventTypeImpl(ComponentEvent.Type.LOADED));
+                Event<Component> select = componentEvent.select(new ComponentEventImpl(ComponentEvent.Type.LOADED));
                 for (Component component : components) {
                     try {
                         monitor.register(new File(artifactRoot.toURI().resolve(component.getIdentifier())).toPath());
@@ -177,7 +177,7 @@ public class FileBasedComponentSupplier implements ComponentSupplier {
                 }
             }
 
-            Event<Component> select = componentEvent.select(new EventTypeImpl(ComponentEvent.Type.UNLOADED));
+            Event<Component> select = componentEvent.select(new ComponentEventImpl(ComponentEvent.Type.UNLOADED));
             for (Iterator<Component> iterator = components.iterator(); iterator.hasNext();) {
                 Component c = iterator.next();
                 if (c.getIdentifier().toString().startsWith(path.toString())) {
