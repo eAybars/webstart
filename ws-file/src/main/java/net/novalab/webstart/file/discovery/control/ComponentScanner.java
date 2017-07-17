@@ -7,6 +7,7 @@ import net.novalab.webstart.service.application.entity.Component;
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 import java.io.File;
+import java.net.URI;
 import java.util.Comparator;
 import java.util.LinkedList;
 import java.util.List;
@@ -29,7 +30,7 @@ public class ComponentScanner implements Function<File, List<? extends Component
         Stream.of(folder.listFiles(f -> !f.isDirectory() && f.getName().endsWith(".jnlp")))
                 .sorted(Comparator.comparing(File::getName))
                 .findFirst()
-                .map(exe -> new FileBasedExecutable(artifactRoot.toURI().relativize(folder.toURI()), folder, exe))
+                .map(exe -> new FileBasedExecutable(toComponentIdentifier(folder), folder, exe))
                 .ifPresent(components::add);
 
         boolean addedExecutable = !components.isEmpty();
@@ -38,10 +39,14 @@ public class ComponentScanner implements Function<File, List<? extends Component
                 .forEach(components::addAll);
 
         if (!addedExecutable && !components.isEmpty()) {
-            components.add(0, new FileBasedComponent(artifactRoot.toURI().relativize(folder.toURI()), folder));
+            components.add(0, new FileBasedComponent(toComponentIdentifier(folder), folder));
         }
 
         return components;
+    }
+
+    private URI toComponentIdentifier(File folder) {
+        return URI.create("/"+artifactRoot.toURI().relativize(folder.toURI()));
     }
 
 }

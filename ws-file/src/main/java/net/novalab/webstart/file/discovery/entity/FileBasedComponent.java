@@ -25,7 +25,8 @@ public class FileBasedComponent extends AbstractComponent {
 
     @Override
     public URL getResource(String path) {
-        if (path.matches(".*\\.\\./.*")) {//if contains ../ skip it for security reasons
+        if (path == null || "".equals(path) ||
+                path.matches(".*\\.\\./.*")) {//if contains ../ skip it for security reasons
             return null;
         }
         File file = new File(getBaseDirectory(), path);

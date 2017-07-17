@@ -3,6 +3,7 @@ package net.novalab.webstart.service.application.entity;
 import java.net.URI;
 import java.net.URL;
 import java.util.Date;
+import java.util.Map;
 import java.util.Properties;
 
 /**
@@ -10,7 +11,7 @@ import java.util.Properties;
  */
 public interface Executable extends Component {
 
-    Properties getAttributes();
+    Map<String, Object> getAttributes();
 
     String getVersion();
 

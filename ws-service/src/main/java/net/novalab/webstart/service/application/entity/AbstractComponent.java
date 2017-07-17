@@ -62,4 +62,10 @@ public abstract class AbstractComponent implements Component {
     public int hashCode() {
         return getIdentifier().hashCode();
     }
+
+    @Override
+    public String toString() {
+        return getIdentifier().toString();
+    }
+
 }

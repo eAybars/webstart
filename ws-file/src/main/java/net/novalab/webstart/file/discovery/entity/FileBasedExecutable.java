@@ -7,26 +7,28 @@ import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URL;
 import java.util.Date;
+import java.util.Map;
 import java.util.Properties;
+import java.util.TreeMap;
 
 /**
  * Created by ertunc on 01/06/17.
  */
 public class FileBasedExecutable extends FileBasedComponent implements Executable {
     private File executable;
-    private Properties properties;
+    private Map<String, Object> attributes;
     private String version;
 
     public FileBasedExecutable(URI id, File base, File executable) {
         super(id, base);
         this.executable = executable;
-        this.properties = new Properties();
+        this.attributes = new TreeMap<>();
         this.version = "";
     }
 
     @Override
-    public Properties getAttributes() {
-        return properties;
+    public Map<String, Object>  getAttributes() {
+        return attributes;
     }
 
     @Override

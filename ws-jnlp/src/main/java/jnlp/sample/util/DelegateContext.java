@@ -5,10 +5,7 @@ import javax.servlet.descriptor.JspConfigDescriptor;
 import java.io.InputStream;
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.util.Enumeration;
-import java.util.EventListener;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.function.Function;
 import java.util.stream.StreamSupport;
 
@@ -69,6 +66,7 @@ public class DelegateContext implements ServletContext {
     public URL getResource(String path) throws MalformedURLException {
         return StreamSupport.stream(resourceSuppliers.spliterator(), false)
                 .map(f -> f.apply(path))
+                .filter(Objects::nonNull)
                 .findFirst()
                 .orElse(context.getResource(path));
     }

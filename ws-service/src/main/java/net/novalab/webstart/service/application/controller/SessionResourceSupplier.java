@@ -50,8 +50,8 @@ public class SessionResourceSupplier {
         @Override
         public URL apply(String s) {
             return executables.stream()
-                    .filter(c -> s.startsWith(c.getIdentifier().toString()))
-                    .map(c -> c.getResource(s))
+                    .filter(c -> s.startsWith(c.getIdentifier().toString() + (c.getIdentifier().toString().endsWith("/") ? "" : "/")))
+                    .map(c -> c.getResource(s.substring((c.getIdentifier().toString() + (c.getIdentifier().toString().endsWith("/") ? "" : "/")).length())))
                     .filter(Objects::nonNull)
                     .findFirst().orElse(null);
         }

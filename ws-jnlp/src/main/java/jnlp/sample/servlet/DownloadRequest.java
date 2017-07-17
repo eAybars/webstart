@@ -83,7 +83,7 @@ public class DownloadRequest {
 	_httpRequest = request;
 	_path = request.getRequestURI();
 	_encoding = request.getHeader(ACCEPT_ENCODING);
-	String context_path = request.getContextPath();	
+	String context_path = request.getContextPath() + request.getServletPath();
 	if (context_path != null) _path = _path.substring(context_path.length());       
 	if (_path == null) _path = request.getServletPath(); // This works for *.<ext> invocations
 	if (_path == null) _path = "/"; // No path given

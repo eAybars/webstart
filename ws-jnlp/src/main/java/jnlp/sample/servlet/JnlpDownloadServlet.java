@@ -36,6 +36,8 @@
 
 package jnlp.sample.servlet;
 
+import jnlp.sample.util.DelegateServletConfig;
+
 import java.io.IOException;
 import java.net.URL;
 import java.util.ResourceBundle;
@@ -70,10 +72,10 @@ import javax.servlet.http.HttpServletResponse;
  * 
  * @version 1.8 01/23/03
  */
-@WebServlet(urlPatterns = "/"+JnlpDownloadServlet.PATH +"/*")
+@WebServlet(urlPatterns = "/"+JnlpDownloadServlet.PATH +"*")
 public class JnlpDownloadServlet extends HttpServlet {
 
-    public static final String PATH = "download";
+    static final String PATH = "download/";
 
     @Inject
     Instance<Function<String, URL>> resourceSuppliers;
@@ -95,7 +97,7 @@ public class JnlpDownloadServlet extends HttpServlet {
     /** Initialize servlet */
     @Override
     public void init(ServletConfig config) throws ServletException {
-        super.init(config);
+        super.init(config = new DelegateServletConfig(resourceSuppliers, config));
 
         // Setup logging
         _log = new Logger(config, getResourceBundle());

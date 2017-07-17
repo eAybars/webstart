@@ -3,8 +3,8 @@ package net.novalab.webstart.file.monitoring.control;
 import net.novalab.webstart.file.discovery.control.ArtifactRoot;
 import net.novalab.webstart.file.discovery.control.ComponentScanner;
 import net.novalab.webstart.service.application.controller.ComponentEvent;
-import net.novalab.webstart.service.application.controller.ComponentSupplier;
 import net.novalab.webstart.service.application.controller.ComponentEventImpl;
+import net.novalab.webstart.service.application.controller.ComponentSupplier;
 import net.novalab.webstart.service.application.entity.Component;
 
 import javax.annotation.PostConstruct;
@@ -64,6 +64,7 @@ public class FileBasedComponentSupplier implements ComponentSupplier {
     }
 
     @PostConstruct
+    @Inject
     @Lock(LockType.WRITE)
     public void init(ComponentScanner componentScanner) {
         if (artifactRoot.exists() && artifactRoot.isDirectory()) {
@@ -169,7 +170,7 @@ public class FileBasedComponentSupplier implements ComponentSupplier {
         if (kind == ENTRY_DELETE) {
             Path relative = root.relativize(path);
 
-            for (Iterator<Map.Entry<String, Task>> iterator = pendingUpdates.entrySet().iterator(); iterator.hasNext();) {
+            for (Iterator<Map.Entry<String, Task>> iterator = pendingUpdates.entrySet().iterator(); iterator.hasNext(); ) {
                 Map.Entry<String, Task> e = iterator.next();
                 if (relative.startsWith(e.getKey())) {
                     e.getValue().cancel();
@@ -178,7 +179,7 @@ public class FileBasedComponentSupplier implements ComponentSupplier {
             }
 
             Event<Component> select = componentEvent.select(new ComponentEventImpl(ComponentEvent.Type.UNLOADED));
-            for (Iterator<Component> iterator = components.iterator(); iterator.hasNext();) {
+            for (Iterator<Component> iterator = components.iterator(); iterator.hasNext(); ) {
                 Component c = iterator.next();
                 if (c.getIdentifier().toString().startsWith(path.toString())) {
                     monitor.unregister(new File(artifactRoot.toURI().resolve(c.getIdentifier())).toPath());
