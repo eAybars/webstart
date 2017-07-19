@@ -6,6 +6,7 @@ import net.novalab.webstart.service.application.controller.ComponentEvent;
 import net.novalab.webstart.service.application.controller.ComponentEventImpl;
 import net.novalab.webstart.service.application.controller.ComponentSupplier;
 import net.novalab.webstart.service.application.entity.Component;
+import net.novalab.webstart.service.application.entity.Executable;
 
 import javax.annotation.PostConstruct;
 import javax.annotation.Resource;
@@ -27,8 +28,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Stream;
 
-import static java.nio.file.StandardWatchEventKinds.ENTRY_CREATE;
-import static java.nio.file.StandardWatchEventKinds.ENTRY_DELETE;
+import static java.nio.file.StandardWatchEventKinds.*;
 
 /**
  * Created by ertunc on 01/06/17.
@@ -187,6 +187,35 @@ public class FileBasedComponentSupplier implements ComponentSupplier {
                     select.fire(c);
                 }
             }
+        }
+    }
+
+    private void handleUpdateEvent(WatchEvent.Kind kind, Path path) {
+        if (kind == ENTRY_MODIFY &&
+                !Files.isDirectory(path) &&
+                path.getFileName().endsWith(".jnlp")) {
+            Path appPath = root.relativize(path.getParent());
+            components.stream()
+                    .filter(Executable.class::isInstance)
+                    .map(Executable.class::cast)
+                    .filter(e -> e.getIdentifier().equals(path.toUri()) &&
+                            e.getExecutable().equals(path.getParent().toUri()))
+                    .findFirst()
+                    .ifPresent(exe -> {
+                        Optional<Task> optionalTask = pendingUpdates.entrySet().stream()
+                                .filter(e -> appPath.startsWith(e.getKey()))
+                                .map(Map.Entry::getValue)
+                                .findAny();
+                        if (optionalTask.isPresent()) {
+                            optionalTask.get().update();
+                        } else {
+                            pendingUpdates.put(appPath.toString(), new Task(() ->
+                                    componentEvent.select(new ComponentEventImpl(ComponentEvent.Type.UPDATED))
+                                            .fire(exe)
+                            ));
+                            setupTimer();
+                        }
+                    });
         }
     }
 

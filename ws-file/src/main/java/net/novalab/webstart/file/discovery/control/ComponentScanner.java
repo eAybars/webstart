@@ -1,5 +1,6 @@
 package net.novalab.webstart.file.discovery.control;
 
+import net.novalab.webstart.file.discovery.entity.AppFilter;
 import net.novalab.webstart.file.discovery.entity.FileBasedComponent;
 import net.novalab.webstart.file.discovery.entity.FileBasedExecutable;
 import net.novalab.webstart.service.application.entity.Component;
@@ -39,7 +40,7 @@ public class ComponentScanner implements Function<File, List<? extends Component
                 .forEach(components::addAll);
 
         if (!addedExecutable && !components.isEmpty()) {
-            components.add(0, new FileBasedComponent(toComponentIdentifier(folder), folder));
+            components.add(0, new FileBasedComponent(toComponentIdentifier(folder), folder, new AppFilter().negate()));
         }
 
         return components;
