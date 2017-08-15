@@ -1,9 +1,7 @@
 package net.novalab.webstart.file.discovery.control;
 
-import net.novalab.webstart.file.discovery.entity.AppFilter;
 import net.novalab.webstart.file.discovery.entity.FileBasedComponent;
 import net.novalab.webstart.file.discovery.entity.FileBasedExecutable;
-import net.novalab.webstart.service.application.entity.Component;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
@@ -19,15 +17,15 @@ import java.util.stream.Stream;
  * Created by ertunc on 20/06/17.
  */
 @ApplicationScoped
-public class ComponentScanner implements Function<File, List<? extends Component>> {
+public class ComponentScanner implements Function<File, List<? extends FileBasedComponent>> {
 
     @Inject
     @ArtifactRoot
     private File artifactRoot;
 
     @Override
-    public List<? extends Component> apply(File folder) {
-        List<Component> components = new LinkedList<>();
+    public List<? extends FileBasedComponent> apply(File folder) {
+        List<FileBasedComponent> components = new LinkedList<>();
         Stream.of(folder.listFiles(f -> !f.isDirectory() && f.getName().endsWith(".jnlp")))
                 .sorted(Comparator.comparing(File::getName))
                 .findFirst()
@@ -40,7 +38,7 @@ public class ComponentScanner implements Function<File, List<? extends Component
                 .forEach(components::addAll);
 
         if (!addedExecutable && !components.isEmpty()) {
-            components.add(0, new FileBasedComponent(toComponentIdentifier(folder), folder, new AppFilter().negate()));
+            components.add(0, new FileBasedComponent(toComponentIdentifier(folder), folder));
         }
 
         return components;
@@ -50,4 +48,7 @@ public class ComponentScanner implements Function<File, List<? extends Component
         return URI.create("/"+artifactRoot.toURI().relativize(folder.toURI()));
     }
 
+    public File getArtifactRoot() {
+        return artifactRoot;
+    }
 }

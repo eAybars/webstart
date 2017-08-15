@@ -20,7 +20,7 @@ public class FileBasedExecutable extends FileBasedComponent implements Executabl
     private String version;
 
     public FileBasedExecutable(URI id, File base, File executable) {
-        super(id, base, p -> true);
+        super(id, base);
         this.executable = executable;
         this.attributes = new TreeMap<>();
         this.version = "";
@@ -50,5 +50,7 @@ public class FileBasedExecutable extends FileBasedComponent implements Executabl
         return getBaseDirectory().toURI().relativize(executable.toURI());
     }
 
-
+    public File getExecutableFile() {
+        return executable;
+    }
 }

@@ -14,6 +14,7 @@
         <module>ws-file</module>
         <module>ws-file-monitor</module>
         <module>ws-app-file-monitoring</module>
+        <module>ws-security</module>
     </modules>
 
     <dependencies>

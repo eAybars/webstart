@@ -1,5 +1,7 @@
-package net.novalab.webstart.service.authorization.control;
+package net.novalab.webstart.security.authorization.control;
 
+import net.novalab.webstart.security.authorization.entity.AuthorizationModule;
+import net.novalab.webstart.security.authorization.entity.AuthorizationStack;
 import net.novalab.webstart.service.application.entity.Component;
 
 import javax.enterprise.context.ApplicationScoped;

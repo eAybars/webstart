@@ -11,5 +11,12 @@
 
     <artifactId>ws-service</artifactId>
 
+    <dependencies>
+        <dependency>
+            <groupId>net.novalab</groupId>
+            <artifactId>ws-jnlp</artifactId>
+            <version>1.0</version>
+        </dependency>
+    </dependencies>
 
 </project>

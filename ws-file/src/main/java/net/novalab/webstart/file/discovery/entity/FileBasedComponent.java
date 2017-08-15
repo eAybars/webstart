@@ -6,20 +6,19 @@ import java.io.File;
 import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URL;
+import java.util.Objects;
 import java.util.function.Predicate;
 
 /**
  * Created by ertunc on 20/06/17.
  */
 public class FileBasedComponent extends AbstractComponent {
-    private Predicate<String> resourceFilter;
     private File baseDirectory;
 
-    public FileBasedComponent(URI identifier, File baseDirectory, Predicate<String> resourceFilter) {
+    public FileBasedComponent(URI identifier, File baseDirectory) {
         super(identifier);
-        this.baseDirectory = baseDirectory;
+        this.baseDirectory = Objects.requireNonNull(baseDirectory);
         this.setTitle(baseDirectory.getName());
-        this.resourceFilter = resourceFilter;
     }
 
     public File getBaseDirectory() {
@@ -29,7 +28,6 @@ public class FileBasedComponent extends AbstractComponent {
     @Override
     public URL getResource(String path) {
         if (path == null || "".equals(path) ||
-                !resourceFilter.test(path) ||
                 path.matches(".*\\.\\./.*")) {//if contains ../ skip it for security reasons
             return null;
         }
@@ -42,5 +40,23 @@ public class FileBasedComponent extends AbstractComponent {
         } catch (MalformedURLException e) {
             return null;
         }
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        if (!super.equals(o)) return false;
+
+        FileBasedComponent component = (FileBasedComponent) o;
+
+        return getBaseDirectory().equals(component.getBaseDirectory());
+    }
+
+    @Override
+    public int hashCode() {
+        int result = super.hashCode();
+        result = 31 * result + getBaseDirectory().hashCode();
+        return result;
     }
 }

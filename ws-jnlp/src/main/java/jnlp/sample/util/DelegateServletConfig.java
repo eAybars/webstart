@@ -1,5 +1,7 @@
 package jnlp.sample.util;
 
+import jnlp.sample.servlet.ResourceLocator;
+
 import javax.servlet.ServletConfig;
 import javax.servlet.ServletContext;
 import java.net.URL;
@@ -14,9 +16,9 @@ public class DelegateServletConfig implements ServletConfig {
     private ServletConfig delegate;
     private ServletContext context;
 
-    public DelegateServletConfig(Iterable<Function<String, URL>> resourceSuppliers, ServletConfig delegate) {
+    public DelegateServletConfig(ResourceLocator resourceLocator, ServletConfig delegate) {
         this.delegate = delegate;
-        this.context = new DelegateContext(resourceSuppliers, delegate.getServletContext());
+        this.context = new DelegateContext(resourceLocator, delegate.getServletContext());
     }
 
     @Override

@@ -72,13 +72,15 @@ import javax.servlet.http.HttpServletResponse;
  * 
  * @version 1.8 01/23/03
  */
-@WebServlet(urlPatterns = "/"+JnlpDownloadServlet.PATH +"*")
+@WebServlet(urlPatterns = JnlpDownloadServlet.URL_PATTERN)
 public class JnlpDownloadServlet extends HttpServlet {
 
-    static final String PATH = "download/";
+    public static final String PATH = "download/";
+    public static final String URL_PATTERN = "/"+JnlpDownloadServlet.PATH +"*";
+
 
     @Inject
-    Instance<Function<String, URL>> resourceSuppliers;
+    ResourceLocator resourceLocator;
 
     // Localization
     private static ResourceBundle _resourceBundle = null;
@@ -97,7 +99,7 @@ public class JnlpDownloadServlet extends HttpServlet {
     /** Initialize servlet */
     @Override
     public void init(ServletConfig config) throws ServletException {
-        super.init(config = new DelegateServletConfig(resourceSuppliers, config));
+        super.init(config = new DelegateServletConfig(resourceLocator, config));
 
         // Setup logging
         _log = new Logger(config, getResourceBundle());

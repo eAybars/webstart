@@ -1,4 +1,4 @@
-package net.novalab.webstart.service.authorization.control;
+package net.novalab.webstart.security.authorization.entity;
 
 import net.novalab.webstart.service.application.entity.Component;
 

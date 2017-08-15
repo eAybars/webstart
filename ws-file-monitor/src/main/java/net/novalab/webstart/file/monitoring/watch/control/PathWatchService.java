@@ -1,4 +1,4 @@
-package net.novalab.webstart.file.monitoring.control;/*
+package net.novalab.webstart.file.monitoring.watch.control;/*
  * Copyright (c) 2008, 2010, Oracle and/or its affiliates. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -29,13 +29,16 @@ package net.novalab.webstart.file.monitoring.control;/*
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+import net.novalab.webstart.file.monitoring.watch.entity.PathWatchServiceEvent;
+
 import java.io.IOException;
 import java.nio.file.*;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
-import java.util.function.BiConsumer;
+import java.util.function.Consumer;
+import java.util.function.Predicate;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -44,44 +47,47 @@ import static java.nio.file.StandardWatchEventKinds.*;
 /**
  * Example to watch a directory (or tree) for changes to files.
  */
-public class UpdateMonitor {
+public class PathWatchService {
 
-    private static Logger LOGGER = Logger.getLogger(UpdateMonitor.class.getName());
-    private static final BiConsumer<WatchEvent.Kind, Path> EMPTY = (k, p) -> {
-    };
+    private static Logger LOGGER = Logger.getLogger(PathWatchService.class.getName());
 
     private final WatchService watcher;
     private final Map<WatchKey, Path> keys;
-    private final List<BiConsumer<WatchEvent.Kind, Path>> eventConsumers;
-    private final Map<Path, BiConsumer<WatchEvent.Kind, Path>> pathEventConsumers;
+    private final NavigableMap<Path, WatchKey> paths;
+    private final List<EventListener> eventListeners;
     private volatile boolean running;
 
     /**
      * Creates a WatchService and registers the given directory
      */
-    public UpdateMonitor() throws IOException {
+    public PathWatchService() throws IOException {
         this.watcher = FileSystems.getDefault().newWatchService();
         this.keys = new ConcurrentHashMap<>();
-        this.eventConsumers = new CopyOnWriteArrayList<>();
-        this.pathEventConsumers = new ConcurrentHashMap<>();
+        this.paths = new TreeMap<>();
+        this.eventListeners = new CopyOnWriteArrayList<>();
     }
 
-    public void addEventConsumer(BiConsumer<WatchEvent.Kind, Path> c) {
-        eventConsumers.add(c);
+    public void addEventListener(EventListener c) {
+        eventListeners.add(c);
     }
 
-    public void removeEventConsumer(BiConsumer<WatchEvent.Kind, Path> c) {
-        eventConsumers.remove(c);
+    public EventListener addEventListener(Consumer<PathWatchServiceEvent> c) {
+        EventListener ec = new CompositionEventListener(c);
+        eventListeners.add(ec);
+        return ec;
     }
 
-    public void addEventConsumer(Path path, BiConsumer<WatchEvent.Kind, Path> c) {
-        pathEventConsumers.put(path, c);
+    public EventListener addEventListener(Consumer<PathWatchServiceEvent> c, Predicate<PathWatchServiceEvent> p) {
+        EventListener ec = new CompositionEventListener(c, p);
+        eventListeners.add(ec);
+        return ec;
     }
 
-    public void removeEventConsumer(Path path) {
-        pathEventConsumers.remove(path);
+    public <T extends Predicate<PathWatchServiceEvent> & Consumer<PathWatchServiceEvent>> EventListener addEventListener(T c) {
+        EventListener ec = new CompositionEventListener(c, c);
+        eventListeners.add(ec);
+        return ec;
     }
-
 
     @SuppressWarnings("unchecked")
     private static <T> WatchEvent<T> cast(WatchEvent<?> event) {
@@ -92,35 +98,39 @@ public class UpdateMonitor {
      * Register the given directory with the WatchService
      */
     public void register(Path dir) throws IOException {
-        WatchKey key = dir.register(watcher, ENTRY_CREATE, ENTRY_DELETE, ENTRY_MODIFY);
-        keys.put(key, dir);
+        if (!paths.containsKey(dir)) {
+            WatchKey key = dir.register(watcher, ENTRY_CREATE, ENTRY_DELETE, ENTRY_MODIFY);
+            keys.put(key, dir);
+            paths.put(dir, key);
+        }
     }
 
     public void unregister(Path dir) {
-        for (Iterator<Map.Entry<WatchKey, Path>> iterator = keys.entrySet().iterator(); iterator.hasNext(); ) {
-            Map.Entry<WatchKey, Path> entry = iterator.next();
-            if (entry.getValue().equals(dir)) {
-                iterator.remove();
-                entry.getKey().cancel();
+        WatchKey key = paths.remove(dir);
+        if (key != null) {
+            keys.remove(key);
+            key.cancel();
+        }
+    }
+
+    public void unregisterAll(Path start) {
+        NavigableMap<Path, WatchKey> candidates = paths.tailMap(start, true);
+        boolean removed = true;
+        while (removed && !candidates.isEmpty()) {
+            if (removed = candidates.firstKey().startsWith(start)) {
+                candidates.remove(candidates.firstKey());
             }
         }
     }
 
-    public void unregisterAll(Path start) throws IOException {
-        Files.walkFileTree(start, new SimpleFileVisitor<Path>() {
-            @Override
-            public FileVisitResult preVisitDirectory(Path dir, BasicFileAttributes attrs)
-                    throws IOException {
-                unregister(dir);
-                return FileVisitResult.CONTINUE;
-            }
-        });
+    public void unregisterAll(Set<Path> startingPaths) {
+        startingPaths.forEach(this::unregisterAll);
     }
 
     public void unregisterAll() {
-        Set<WatchKey> watchKeys = new HashSet<>(keys.keySet());
-        watchKeys.forEach(WatchKey::cancel);
-        this.keys.keySet().removeAll(watchKeys);
+        keys.keySet().forEach(WatchKey::cancel);
+        keys.clear();
+        paths.clear();
     }
 
 
@@ -182,11 +192,19 @@ public class UpdateMonitor {
                 Path name = ev.context();
                 Path child = dir.resolve(name);
 
-//                System.out.format("%s: %s\n", event.kind().name(), child);
+                if (kind == ENTRY_DELETE) {
+                    try {
+                        unregister(child);
+                    } catch (Exception e) {
+                        //ignore failure
+                    }
+                }
 
                 //notify consumers
-                eventConsumers.forEach(c -> c.accept(kind, child));
-                pathEventConsumers.getOrDefault(dir, EMPTY).accept(kind, child);
+                PathWatchServiceEvent e = new PathWatchServiceEvent(this, event, child);
+                eventListeners.stream()
+                        .filter(c -> c.test(e))
+                        .forEach(c -> c.accept(e));
             }
 
             // reset key and remove from set if directory no longer accessible
@@ -202,5 +220,36 @@ public class UpdateMonitor {
         }
     }
 
+
+    public interface EventListener extends Consumer<PathWatchServiceEvent>, Predicate<PathWatchServiceEvent> {
+        @Override
+        default boolean test(PathWatchServiceEvent pathWatchServiceEvent) {
+            return true;
+        }
+    }
+
+    private static class CompositionEventListener implements EventListener {
+        private Consumer<PathWatchServiceEvent> consumer;
+        private Predicate<PathWatchServiceEvent> predicate;
+
+        public CompositionEventListener(Consumer<PathWatchServiceEvent> consumer) {
+            this(consumer, e -> true);
+        }
+
+        public CompositionEventListener(Consumer<PathWatchServiceEvent> consumer, Predicate<PathWatchServiceEvent> predicate) {
+            this.consumer = consumer;
+            this.predicate = predicate;
+        }
+
+        @Override
+        public void accept(PathWatchServiceEvent pathWatchServiceEvent) {
+            consumer.accept(pathWatchServiceEvent);
+        }
+
+        @Override
+        public boolean test(PathWatchServiceEvent pathWatchServiceEvent) {
+            return predicate.test(pathWatchServiceEvent);
+        }
+    }
 
 }

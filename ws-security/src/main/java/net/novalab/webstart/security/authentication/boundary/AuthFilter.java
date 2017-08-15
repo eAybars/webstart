@@ -1,4 +1,6 @@
-package jnlp.sample.filter;
+package net.novalab.webstart.security.authentication.boundary;
+
+import jnlp.sample.servlet.JnlpDownloadServlet;
 
 import javax.inject.Inject;
 import javax.servlet.*;
@@ -10,7 +12,7 @@ import java.security.Principal;
 /**
  * Created by ertunc on 31/08/15.
  */
-@WebFilter(description = "Ensure authentication", urlPatterns = {"/webstart/*"})
+@WebFilter(description = "Ensure authentication", urlPatterns = JnlpDownloadServlet.URL_PATTERN)
 public class AuthFilter implements Filter {
     @Inject
     Principal principal;

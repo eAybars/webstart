@@ -1,24 +1,27 @@
 package jnlp.sample.util;
 
+import jnlp.sample.servlet.ResourceLocator;
+
 import javax.servlet.*;
 import javax.servlet.descriptor.JspConfigDescriptor;
 import java.io.InputStream;
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.util.*;
-import java.util.function.Function;
-import java.util.stream.StreamSupport;
+import java.util.Enumeration;
+import java.util.EventListener;
+import java.util.Map;
+import java.util.Set;
 
 /**
  * Created by ertunc on 25/08/15.
  */
 public class DelegateContext implements ServletContext {
 
-    private Iterable<Function<String, URL>> resourceSuppliers;
+    private ResourceLocator resourceLocator;
     private ServletContext context;
 
-    public DelegateContext(Iterable<Function<String, URL>> resourceSuppliers, ServletContext context) {
-        this.resourceSuppliers = resourceSuppliers;
+    public DelegateContext(ResourceLocator resourceLocator, ServletContext context) {
+        this.resourceLocator = resourceLocator;
         this.context = context;
     }
 
@@ -29,7 +32,7 @@ public class DelegateContext implements ServletContext {
 
     @Override
     public ServletContext getContext(String uripath) {
-        return new DelegateContext(resourceSuppliers, context.getContext(uripath));
+        return new DelegateContext(resourceLocator, context.getContext(uripath));
     }
 
     @Override
@@ -64,11 +67,11 @@ public class DelegateContext implements ServletContext {
 
     @Override
     public URL getResource(String path) throws MalformedURLException {
-        return StreamSupport.stream(resourceSuppliers.spliterator(), false)
-                .map(f -> f.apply(path))
-                .filter(Objects::nonNull)
-                .findFirst()
-                .orElse(context.getResource(path));
+        URL url = resourceLocator.apply(path);
+        if (url == null) {
+            url = context.getResource(path);
+        }
+        return url;
     }
 
     @Override
