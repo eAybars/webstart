@@ -9,6 +9,7 @@ import net.novalab.webstart.service.application.controller.ComponentEventImpl;
 import net.novalab.webstart.service.application.controller.ComponentSupplier;
 import net.novalab.webstart.service.application.entity.Component;
 
+import javax.annotation.PostConstruct;
 import javax.ejb.*;
 import javax.enterprise.event.Event;
 import javax.inject.Inject;
@@ -24,6 +25,8 @@ import java.util.stream.Stream;
 @Singleton
 @Startup
 @ConcurrencyManagement
+@LocalBean
+@Local
 public class FileBasedComponentSupplier implements ComponentSupplier {
     private static final Logger LOGGER = Logger.getLogger(FileBasedComponentSupplier.class.getName());
 
@@ -62,6 +65,7 @@ public class FileBasedComponentSupplier implements ComponentSupplier {
     }
 
     @Lock(LockType.WRITE)
+    @PostConstruct
     public void reloadAll() {
         pathWatchService.unregisterAll();
         taskManager.cancelAll();

@@ -7,7 +7,6 @@ import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URL;
 import java.util.Objects;
-import java.util.function.Predicate;
 
 /**
  * Created by ertunc on 20/06/17.
@@ -42,21 +41,4 @@ public class FileBasedComponent extends AbstractComponent {
         }
     }
 
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-        if (!super.equals(o)) return false;
-
-        FileBasedComponent component = (FileBasedComponent) o;
-
-        return getBaseDirectory().equals(component.getBaseDirectory());
-    }
-
-    @Override
-    public int hashCode() {
-        int result = super.hashCode();
-        result = 31 * result + getBaseDirectory().hashCode();
-        return result;
-    }
 }

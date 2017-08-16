@@ -14,6 +14,7 @@ import java.util.stream.StreamSupport;
 public class Components {
 
     @Inject
+    @Any
     Instance<ComponentSupplier> componentSuppliers;
 
     @Inject
