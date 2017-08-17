@@ -75,8 +75,9 @@ import javax.servlet.http.HttpServletResponse;
 @WebServlet(urlPatterns = JnlpDownloadServlet.URL_PATTERN)
 public class JnlpDownloadServlet extends HttpServlet {
 
-    public static final String PATH = "download/";
-    public static final String URL_PATTERN = "/"+JnlpDownloadServlet.PATH +"*";
+    public static final String PATH = "/download";
+    public static final String URL_PATTERN = JnlpDownloadServlet.PATH +"/*";
+    private static final long serialVersionUID = -8861514207733806304L;
 
 
     @Inject

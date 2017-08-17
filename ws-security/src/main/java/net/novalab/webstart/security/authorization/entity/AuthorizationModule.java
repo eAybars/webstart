@@ -1,6 +1,6 @@
 package net.novalab.webstart.security.authorization.entity;
 
-import net.novalab.webstart.service.application.entity.Component;
+import net.novalab.webstart.service.component.entity.Component;
 
 import java.util.function.Predicate;
 

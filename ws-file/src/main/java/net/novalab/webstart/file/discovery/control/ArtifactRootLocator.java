@@ -1,5 +1,7 @@
 package net.novalab.webstart.file.discovery.control;
 
+import net.novalab.webstart.file.discovery.entity.ArtifactRoot;
+
 import javax.annotation.PostConstruct;
 import javax.enterprise.context.ApplicationScoped;
 import javax.enterprise.inject.Produces;

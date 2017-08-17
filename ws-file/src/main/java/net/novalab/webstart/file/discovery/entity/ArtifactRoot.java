@@ -1,4 +1,4 @@
-package net.novalab.webstart.file.discovery.control;
+package net.novalab.webstart.file.discovery.entity;
 
 import javax.inject.Qualifier;
 import java.lang.annotation.Retention;

@@ -1,6 +1,6 @@
-package net.novalab.webstart.file.discovery.entity;
+package net.novalab.webstart.file.component.entity;
 
-import net.novalab.webstart.service.application.entity.AbstractComponent;
+import net.novalab.webstart.service.component.entity.AbstractComponent;
 
 import java.io.File;
 import java.net.MalformedURLException;

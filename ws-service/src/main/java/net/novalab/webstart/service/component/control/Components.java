@@ -1,6 +1,6 @@
-package net.novalab.webstart.service.application.controller;
+package net.novalab.webstart.service.component.control;
 
-import net.novalab.webstart.service.application.entity.Component;
+import net.novalab.webstart.service.component.entity.Component;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.enterprise.inject.Any;

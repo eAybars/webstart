@@ -1,14 +1,11 @@
-package net.novalab.webstart.file.discovery.entity;
+package net.novalab.webstart.file.component.entity;
 
-import net.novalab.webstart.service.application.entity.Executable;
+import net.novalab.webstart.service.component.entity.Executable;
 
 import java.io.File;
-import java.net.MalformedURLException;
 import java.net.URI;
-import java.net.URL;
 import java.util.Date;
 import java.util.Map;
-import java.util.Properties;
 import java.util.TreeMap;
 
 /**

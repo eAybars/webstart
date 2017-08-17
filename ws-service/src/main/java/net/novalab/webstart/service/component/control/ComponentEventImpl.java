@@ -1,4 +1,4 @@
-package net.novalab.webstart.service.application.controller;
+package net.novalab.webstart.service.component.control;
 
 import javax.enterprise.util.AnnotationLiteral;
 

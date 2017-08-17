@@ -1,8 +1,8 @@
 package net.novalab.webstart.service.resource.control;
 
 import jnlp.sample.servlet.ResourceLocator;
-import net.novalab.webstart.service.application.controller.Components;
-import net.novalab.webstart.service.application.entity.Component;
+import net.novalab.webstart.service.component.control.Components;
+import net.novalab.webstart.service.component.entity.Component;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;

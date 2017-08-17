@@ -1,16 +1,17 @@
-package net.novalab.webstart.service.application.entity;
+package net.novalab.webstart.service.component.entity;
 
+import javax.json.JsonObject;
 import java.net.URI;
 import java.util.Objects;
 
 /**
- * Created by ertunc on 30/05/17.
+ * AbstractComponent is a basis implementation for the components. It provides basic functionality like descriptive
+ * information, toString, equals and hashCode implementations and leaves the mapping of paths to URL to its subclass implementations.
  */
-public abstract class AbstractComponent implements Component {
+public abstract class AbstractComponent extends SimpleArtifact implements Component {
+
+    private static final long serialVersionUID = 4476751500551917113L;
     private URI identifier;
-    private String title;
-    private String description;
-    private URI iconUrl;
 
     public AbstractComponent(URI identifier) {
         this.identifier = Objects.requireNonNull(identifier);
@@ -19,33 +20,6 @@ public abstract class AbstractComponent implements Component {
     @Override
     public URI getIdentifier() {
         return identifier;
-    }
-
-    @Override
-    public String getTitle() {
-        return title;
-    }
-
-    public void setTitle(String title) {
-        this.title = title;
-    }
-
-    @Override
-    public String getDescription() {
-        return description;
-    }
-
-    public void setDescription(String description) {
-        this.description = description;
-    }
-
-    @Override
-    public URI getIcon() {
-        return iconUrl;
-    }
-
-    public void setIconUrl(URI iconUrl) {
-        this.iconUrl = iconUrl;
     }
 
     @Override
@@ -68,4 +42,8 @@ public abstract class AbstractComponent implements Component {
         return getIdentifier().toString();
     }
 
+    @Override
+    public JsonObject toJson() {
+        return Component.super.toJson();
+    }
 }
