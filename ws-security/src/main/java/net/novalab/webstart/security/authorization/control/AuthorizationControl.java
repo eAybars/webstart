@@ -3,6 +3,8 @@ package net.novalab.webstart.security.authorization.control;
 import net.novalab.webstart.security.authorization.entity.AuthorizationModule;
 import net.novalab.webstart.security.authorization.entity.AuthorizationStack;
 import net.novalab.webstart.service.component.entity.Component;
+import net.novalab.webstart.service.filter.entity.AccessFilter;
+import net.novalab.webstart.service.filter.entity.VisibilityFilter;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
@@ -13,6 +15,8 @@ import java.util.function.Predicate;
  * Created by ertunc on 30/05/17.
  */
 @ApplicationScoped
+@AccessFilter
+@VisibilityFilter
 public class AuthorizationControl implements Predicate<Component> {
 
     @Inject

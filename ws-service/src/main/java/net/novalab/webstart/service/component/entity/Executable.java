@@ -1,6 +1,7 @@
 package net.novalab.webstart.service.component.entity;
 
-import javax.json.Json;
+import net.novalab.webstart.service.json.control.Enrich;
+
 import javax.json.JsonObject;
 import javax.json.JsonObjectBuilder;
 import java.net.URI;
@@ -44,9 +45,7 @@ public interface Executable extends Component {
 
     @Override
     default JsonObject toJson() {
-        JsonObject jsonObject = Component.super.toJson();
-        JsonObjectBuilder objectBuilder = Json.createObjectBuilder();
-        jsonObject.forEach(objectBuilder::add);
+        JsonObjectBuilder objectBuilder = Enrich.object(Component.super.toJson());
         getAttributes().forEach((k, v) -> objectBuilder.add(k, v.toString()));
 
         if (getVersion() != null) {

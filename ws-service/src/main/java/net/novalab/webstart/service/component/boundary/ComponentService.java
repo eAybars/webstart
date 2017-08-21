@@ -1,10 +1,12 @@
 package net.novalab.webstart.service.component.boundary;
 
-import com.sun.jndi.toolkit.url.Uri;
 import jnlp.sample.servlet.JnlpDownloadServlet;
 import net.novalab.webstart.service.component.control.Components;
 import net.novalab.webstart.service.component.entity.Component;
+import net.novalab.webstart.service.filter.entity.AggregatedFilter;
+import net.novalab.webstart.service.filter.entity.VisibilityFilter;
 import net.novalab.webstart.service.json.control.Pagination;
+import net.novalab.webstart.service.json.entity.JsonErrorResponse;
 
 import javax.ejb.Stateless;
 import javax.inject.Inject;
@@ -16,8 +18,8 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.Response;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.util.*;
-import java.util.stream.Stream;
+import java.util.function.Predicate;
+import java.util.stream.Collectors;
 
 /**
  * Created by ertunc on 30/05/17.
@@ -28,72 +30,72 @@ import java.util.stream.Stream;
 public class ComponentService {
     @Inject
     Components components;
+    @Inject
+    @AggregatedFilter
+    @VisibilityFilter
+    Predicate<Component> filter;
 
     @GET
     @Path("home")
     @Produces("text/plain")
-    public String getComponentHome(@Context  HttpServletRequest request) {
-        return request.getContextPath()+ JnlpDownloadServlet.PATH;
+    public String getComponentHome(@Context HttpServletRequest request) {
+        return request.getContextPath() + JnlpDownloadServlet.PATH;
     }
 
     @GET
     public JsonObject getAllComponents(@QueryParam("start") @DefaultValue("0") @Min(0) int start,
                                        @QueryParam("size") @DefaultValue("100") @Min(0) int size) {
-        return Pagination.of(findImmediateComponents(components.filtered()))
-                .startingFrom(start)
-                .withSize(size)
-                .done();
+        return Pagination.of
+                (components.stream()
+                        .filter(filter)
+                        .sorted()
+                        .collect(Collectors.toList())
+                ).startingFrom(start).withSize(size).done();
     }
 
     @GET
     @Path("parent")
     public Response getParent(@QueryParam("component") String componentId) {
+        if (componentId == null) {
+            return Response.status(Response.Status.BAD_REQUEST)
+                    .entity(new JsonErrorResponse("Parent component identifier must be specified").toJson()).build();
+        }
         try {
-            URI identifier = new URI(Optional.ofNullable(componentId)
-                    .map(c -> c.endsWith("/") ? c : c+"/")
-                    .orElse(null));
-            return components.filtered()
-                    .filter(c -> identifier.toString().startsWith(c.getIdentifier().toString()))
-                    .sorted(Comparator.reverseOrder())
-                    .findFirst()
+            return components.hierarchy(filter).parent(new URI(componentId.endsWith("/") ? componentId : componentId + "/"))
                     .map(Response::ok)
                     .orElse(Response.status(Response.Status.NOT_FOUND))
                     .build();
         } catch (URISyntaxException e) {
-            return Response.status(Response.Status.BAD_REQUEST).entity(componentId + " is not a valid URI").build();
-        } catch (NullPointerException e) {
-            return Response.status(Response.Status.BAD_REQUEST).entity("Parent component identifier must be specified").build();
+            return Response.status(Response.Status.BAD_REQUEST)
+                    .entity(new JsonErrorResponse(componentId + " is not a valid URI").toJson()).build();
         }
     }
 
     @GET
     @Path("children")
-    public JsonObject getChildren(@QueryParam("parent") @DefaultValue(".*") String parentIdentifier,
-                                  @QueryParam("start") @DefaultValue("0") @Min(0) int start,
-                                  @QueryParam("size") @DefaultValue("100") @Min(0) int size) {
-        return Pagination.of(findImmediateComponents(components.filtered()
-                .filter(c -> c.getIdentifier().toString().matches(parentIdentifier))))
-                .startingFrom(start)
-                .withSize(size)
-                .done();
-    }
-
-
-    private List<Component> findImmediateComponents(Stream<Component> components) {
-        return new ArrayList<>(components
-                .reduce(new TreeMap<>(), this::updateMap, (m1, m2) -> {
-                    TreeMap<String, Component> map = new TreeMap<>(m1);
-                    m2.values().forEach(c -> updateMap(map, c));
-                    return map;
-                }).values());
-    }
-
-    private TreeMap<String, Component> updateMap(TreeMap<String, Component> m, Component c) {
-        if (m.headMap(c.getIdentifier().toString()).isEmpty()) {
-            m.tailMap(c.getIdentifier().toString());
-            m.put(c.getIdentifier().toString(), c);
+    public Response getChildren(@QueryParam("parent") @DefaultValue("/") String parentIdentifier,
+                                @QueryParam("start") @DefaultValue("0") @Min(0) int start,
+                                @QueryParam("size") @DefaultValue("100") @Min(0) int size) {
+        StringBuilder id = new StringBuilder(parentIdentifier);
+        if (id.charAt(0) != '/') {
+            id.insert(0, '/');
         }
-        return m;
+        if (id.charAt(id.length() - 1) != '/') {
+            id.append('/');
+        }
+
+        try {
+            return Response.ok(Pagination.of(
+                    components.hierarchy(filter)
+                            .children(new URI(id.toString()))
+                            .sorted()
+                            .collect(Collectors.toList())
+                    ).startingFrom(start).withSize(size).done()
+            ).build();
+        } catch (URISyntaxException e) {
+            return Response.status(Response.Status.BAD_REQUEST)
+                    .entity(new JsonErrorResponse(parentIdentifier + " is not a valid URI").toJson()).build();
+        }
     }
 
 }

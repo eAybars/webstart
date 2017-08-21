@@ -135,7 +135,7 @@ public class PathWatchService {
 
 
     /**
-     * Register the given directory, and all its sub-directories, with the
+     * Register the given directory, and stream its sub-directories, with the
      * WatchService.
      */
     public void registerAll(final Path start) throws IOException {
@@ -152,7 +152,7 @@ public class PathWatchService {
 
 
     /**
-     * Process all events for keys queued to the watcher
+     * Process stream events for keys queued to the watcher
      */
     public void start() {
         if (running) {
@@ -212,7 +212,7 @@ public class PathWatchService {
             if (!valid) {
                 keys.remove(key);
 
-                // all directories are inaccessible
+                // stream directories are inaccessible
                 if (keys.isEmpty()) {
                     break;
                 }
