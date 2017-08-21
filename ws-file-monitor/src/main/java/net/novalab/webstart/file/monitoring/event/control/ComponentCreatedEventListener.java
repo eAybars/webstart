@@ -1,6 +1,6 @@
 package net.novalab.webstart.file.monitoring.event.control;
 
-import net.novalab.webstart.file.component.control.FileBasedComponentSupplier;
+import net.novalab.webstart.file.artifact.control.FileBasedArtifactSupplier;
 import net.novalab.webstart.file.monitoring.task.control.TaskManager;
 import net.novalab.webstart.file.monitoring.task.entity.Task;
 import net.novalab.webstart.file.monitoring.watch.control.PathWatchService;
@@ -18,12 +18,12 @@ public class ComponentCreatedEventListener implements PathWatchService.EventList
     @Inject
     TaskManager taskManager;
     @Inject
-    FileBasedComponentSupplier fileBasedComponentSupplier;
+    FileBasedArtifactSupplier fileBasedComponentSupplier;
 
     @Override
     public void accept(PathWatchServiceEvent e) {
         TreeSet<Path> parentComponents = fileBasedComponentSupplier.get()
-                .map(c -> c.getBaseDirectory().toPath())
+                .map(c -> c.getIdentifierFile().toPath())
                 .filter(cPath -> e.getPath().startsWith(cPath))
                 .collect(Collectors.toCollection(TreeSet::new));
 

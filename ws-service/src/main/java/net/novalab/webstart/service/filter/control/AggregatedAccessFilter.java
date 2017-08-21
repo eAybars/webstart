@@ -1,6 +1,6 @@
 package net.novalab.webstart.service.filter.control;
 
-import net.novalab.webstart.service.component.entity.Component;
+import net.novalab.webstart.service.artifact.entity.Artifact;
 import net.novalab.webstart.service.filter.entity.AccessFilter;
 import net.novalab.webstart.service.filter.entity.AggregatedFilter;
 
@@ -11,13 +11,13 @@ import java.util.stream.StreamSupport;
 
 @AggregatedFilter
 @AccessFilter
-public class AggregatedAccessFilter implements Predicate<Component> {
+public class AggregatedAccessFilter implements Predicate<Artifact> {
     @Inject
     @AccessFilter
-    Instance<Predicate<Component>> componentFilters;
+    Instance<Predicate<Artifact>> componentFilters;
 
     @Override
-    public boolean test(Component component) {
+    public boolean test(Artifact component) {
         return StreamSupport.stream(componentFilters.spliterator(), false)
                 .filter(((Predicate<Object>)AggregatedAccessFilter.class::isInstance).negate())
                 .allMatch(filter -> filter.test(component));

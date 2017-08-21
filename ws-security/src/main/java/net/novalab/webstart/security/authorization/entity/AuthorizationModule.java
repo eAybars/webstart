@@ -1,13 +1,13 @@
 package net.novalab.webstart.security.authorization.entity;
 
-import net.novalab.webstart.service.component.entity.Component;
+import net.novalab.webstart.service.artifact.entity.Artifact;
 
 import java.util.function.Predicate;
 
 /**
  * Created by ertunc on 30/05/17.
  */
-public interface AuthorizationModule extends Predicate<Component> {
+public interface AuthorizationModule extends Predicate<Artifact> {
     enum Requirement {
         REQUIRED,
         REQUISITE,

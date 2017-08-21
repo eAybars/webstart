@@ -1,8 +1,8 @@
 package net.novalab.webstart.file.monitoring.event.control;
 
-import net.novalab.webstart.file.component.entity.FileBasedComponent;
+import net.novalab.webstart.file.artifact.entity.FileBasedArtifact;
 import net.novalab.webstart.file.monitoring.watch.control.PathWatchService;
-import net.novalab.webstart.service.component.control.ComponentEvent;
+import net.novalab.webstart.service.artifact.control.ArtifactEvent;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.enterprise.event.Observes;
@@ -21,24 +21,24 @@ public class ComponentPathManagementEventListener {
     PathWatchService pathWatchService;
 
     public void onComponentLoad(@Observes(notifyObserver = Reception.ALWAYS)
-                                @ComponentEvent(ComponentEvent.Type.LOADED)
-                                        FileBasedComponent c) {
+                                @ArtifactEvent(ArtifactEvent.Type.LOADED)
+                                        FileBasedArtifact c) {
         try {
-            pathWatchService.register(c.getBaseDirectory().toPath());
-            LOGGER.log(Level.INFO, "Registered path for listening: " + c.getBaseDirectory().toPath());
+            pathWatchService.register(c.getIdentifierFile().toPath());
+            LOGGER.log(Level.INFO, "Registered path for listening: " + c.getIdentifierFile().toPath());
         } catch (IOException e) {
-            LOGGER.log(Level.SEVERE, "Cannot register path for listening: " + c.getBaseDirectory().toPath(), e);
+            LOGGER.log(Level.SEVERE, "Cannot register path for listening: " + c.getIdentifierFile().toPath(), e);
         }
     }
 
     public void onComponentUnload(@Observes(notifyObserver = Reception.ALWAYS)
-                                @ComponentEvent(ComponentEvent.Type.UNLOADED)
-                                        FileBasedComponent c) {
+                                @ArtifactEvent(ArtifactEvent.Type.UNLOADED)
+                                          FileBasedArtifact c) {
         try {
-            pathWatchService.unregister(c.getBaseDirectory().toPath());
-            LOGGER.log(Level.INFO, "Unregistered path for listening: " + c.getBaseDirectory().toPath());
+            pathWatchService.unregister(c.getIdentifierFile().toPath());
+            LOGGER.log(Level.INFO, "Unregistered path for listening: " + c.getIdentifierFile().toPath());
         } catch (Exception e) {
-            LOGGER.log(Level.SEVERE, "An error occured while unregistering path for listening: " + c.getBaseDirectory().toPath(), e);
+            LOGGER.log(Level.SEVERE, "An error occured while unregistering path for listening: " + c.getIdentifierFile().toPath(), e);
         }
     }
 }

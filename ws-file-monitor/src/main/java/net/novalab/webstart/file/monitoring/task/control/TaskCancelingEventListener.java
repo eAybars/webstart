@@ -1,7 +1,7 @@
 package net.novalab.webstart.file.monitoring.task.control;
 
-import net.novalab.webstart.file.component.entity.FileBasedComponent;
-import net.novalab.webstart.service.component.control.ComponentEvent;
+import net.novalab.webstart.file.artifact.entity.FileBasedArtifact;
+import net.novalab.webstart.service.artifact.control.ArtifactEvent;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.enterprise.event.Observes;
@@ -14,9 +14,9 @@ public class TaskCancelingEventListener {
     TaskManager taskManager;
 
     public void onComponentUnload(@Observes(notifyObserver = Reception.ALWAYS)
-                                  @ComponentEvent(ComponentEvent.Type.UNLOADED)
-                                          FileBasedComponent c) {
-        taskManager.removeAll(taskManager.findTasksUnder(c.getBaseDirectory().toPath()));
+                                  @ArtifactEvent(ArtifactEvent.Type.UNLOADED)
+                                          FileBasedArtifact c) {
+        taskManager.removeAll(taskManager.findTasksUnder(c.getIdentifierFile().toPath()));
     }
 
 }

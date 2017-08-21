@@ -2,7 +2,7 @@ package net.novalab.webstart.security.authorization.control;
 
 import net.novalab.webstart.security.authorization.entity.AuthorizationModule;
 import net.novalab.webstart.security.authorization.entity.AuthorizationStack;
-import net.novalab.webstart.service.component.entity.Component;
+import net.novalab.webstart.service.artifact.entity.Artifact;
 import net.novalab.webstart.service.filter.entity.AccessFilter;
 import net.novalab.webstart.service.filter.entity.VisibilityFilter;
 
@@ -17,13 +17,13 @@ import java.util.function.Predicate;
 @ApplicationScoped
 @AccessFilter
 @VisibilityFilter
-public class AuthorizationControl implements Predicate<Component> {
+public class AuthorizationControl implements Predicate<Artifact> {
 
     @Inject
     AuthorizationStack authorizationStack;
 
     @Override
-    public boolean test(Component component) {
+    public boolean test(Artifact component) {
         Iterator<AuthorizationModule> iterator = authorizationStack.iterator();
         boolean optionalStatus = false;
         boolean nonOptionalStatus = true;

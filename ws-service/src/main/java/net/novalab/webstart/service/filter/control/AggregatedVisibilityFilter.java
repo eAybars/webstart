@@ -1,6 +1,6 @@
 package net.novalab.webstart.service.filter.control;
 
-import net.novalab.webstart.service.component.entity.Component;
+import net.novalab.webstart.service.artifact.entity.Artifact;
 import net.novalab.webstart.service.filter.entity.AggregatedFilter;
 import net.novalab.webstart.service.filter.entity.VisibilityFilter;
 
@@ -11,13 +11,13 @@ import java.util.stream.StreamSupport;
 
 @AggregatedFilter
 @VisibilityFilter
-public class AggregatedVisibilityFilter implements Predicate<Component> {
+public class AggregatedVisibilityFilter implements Predicate<Artifact> {
     @Inject
     @VisibilityFilter
-    Instance<Predicate<Component>> componentFilters;
+    Instance<Predicate<Artifact>> componentFilters;
 
     @Override
-    public boolean test(Component component) {
+    public boolean test(Artifact component) {
         return StreamSupport.stream(componentFilters.spliterator(), false)
                 .filter(((Predicate<Object>)AggregatedVisibilityFilter.class::isInstance).negate())
                 .allMatch(filter -> filter.test(component));
