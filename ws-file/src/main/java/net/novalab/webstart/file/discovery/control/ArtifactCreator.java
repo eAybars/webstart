@@ -3,8 +3,9 @@ package net.novalab.webstart.file.discovery.control;
 import net.novalab.webstart.file.artifact.entity.FileBasedArtifact;
 
 import java.io.File;
-import java.net.URI;
-import java.util.function.BiFunction;
+import java.util.List;
+import java.util.function.Function;
+import java.util.stream.Stream;
 
-public interface ArtifactCreator extends BiFunction<URI, File, FileBasedArtifact> {
+public interface ArtifactCreator extends Function<File, List<? extends FileBasedArtifact>> {
 }

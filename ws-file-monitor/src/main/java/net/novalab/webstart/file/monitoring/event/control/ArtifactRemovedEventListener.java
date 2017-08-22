@@ -11,25 +11,23 @@ import javax.inject.Inject;
 import java.nio.file.Files;
 
 @ApplicationScoped
-public class ComponentExecutableUpdatedEventListener implements PathWatchService.EventListener {
+public class ArtifactRemovedEventListener implements PathWatchService.EventListener{
     @Inject
     TaskManager taskManager;
     @Inject
     FileBasedArtifactSupplier fileBasedComponentSupplier;
 
-
     @Override
     public void accept(PathWatchServiceEvent e) {
-        taskManager.add(new Task(e.getPath(), "Update component(s) for " + e.getPath().getParent(), () -> {
-            fileBasedComponentSupplier.updateComponents(e.getPath().getParent());
+        taskManager.add(new Task(e.getPath(), "Remove components for " + e.getPath(), () -> {
+            fileBasedComponentSupplier.unloadComponents(e.getPath());
         }));
     }
 
     @Override
     public boolean test(PathWatchServiceEvent e) {
-        return !Files.isDirectory(e.getPath()) &&
-                e.getPath().getFileName().toString().endsWith(".jnlp") &&
-                !taskManager.findTask(e.getPath()).isPresent() &&
-                fileBasedComponentSupplier.findComponent(e.getPath().getParent()).isPresent();
+        return e.isDelete() && Files.isDirectory(e.getPath()) &&
+                !taskManager.findTask(e.getPath()).isPresent();
     }
+
 }

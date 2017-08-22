@@ -2,18 +2,16 @@ package net.novalab.webstart.file.discovery.control;
 
 import net.novalab.webstart.file.artifact.entity.FileBasedArtifact;
 import net.novalab.webstart.file.artifact.entity.FileBasedComponent;
-import net.novalab.webstart.file.discovery.entity.ArtifactRoot;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.enterprise.inject.Any;
 import javax.enterprise.inject.Instance;
 import javax.inject.Inject;
 import java.io.File;
-import java.net.URI;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Objects;
-import java.util.function.Function;
+import java.util.function.Predicate;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
@@ -21,11 +19,7 @@ import java.util.stream.StreamSupport;
  * Created by ertunc on 20/06/17.
  */
 @ApplicationScoped
-public class ArtifactScanner implements Function<File, List<? extends FileBasedArtifact>> {
-
-    @Inject
-    @ArtifactRoot
-    private File artifactRoot;
+public class ArtifactScanner extends AbstractArtifactCreator {
 
     @Inject
     @Any
@@ -36,10 +30,10 @@ public class ArtifactScanner implements Function<File, List<? extends FileBasedA
         List<FileBasedArtifact> components = new LinkedList<>();
 
         StreamSupport.stream(componentCreators.spliterator(), false)
-                .map(cc -> cc.apply(toComponentIdentifier(folder), folder))
+                .filter(((Predicate<ArtifactCreator>)ArtifactScanner.class::isInstance).negate())
+                .flatMap(cc -> cc.apply(folder).stream())
                 .filter(Objects::nonNull)
-                .findFirst()
-                .ifPresent(components::add);
+                .forEach(components::add);
 
         boolean addedComponent = !components.isEmpty();
 
@@ -48,17 +42,10 @@ public class ArtifactScanner implements Function<File, List<? extends FileBasedA
                 .forEach(components::addAll);
 
         if (!addedComponent && !components.isEmpty()) {
-            components.add(0, new FileBasedComponent(toComponentIdentifier(folder), folder));
+            components.add(0, new FileBasedComponent(toIdentifier(folder), folder));
         }
 
         return components;
     }
 
-    private URI toComponentIdentifier(File folder) {
-        return URI.create("/" + artifactRoot.toURI().relativize(folder.toURI()));
-    }
-
-    public File getArtifactRoot() {
-        return artifactRoot;
-    }
 }

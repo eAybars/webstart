@@ -24,7 +24,7 @@ import java.util.stream.Collectors;
 /**
  * Created by ertunc on 30/05/17.
  */
-@Path("artifacts")
+@Path("artifact")
 @Stateless
 @Produces("application/json;charset=utf-8")
 public class ArtifactService {

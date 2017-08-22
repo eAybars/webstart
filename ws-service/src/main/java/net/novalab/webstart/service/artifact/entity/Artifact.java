@@ -45,21 +45,41 @@ public interface Artifact extends Comparable<Artifact>, JsonSerializable {
     URI getIcon();
 
     /**
-     * Resolves a given URI in accordance to the identifier URI of this artifact and the supplied URI itself. Specifics
-     * of the resolution process depends on the subclass.
+     * Resolves a given URI in accordance to the identifier URI of this artifact and the supplied URI itself. The resolution
+     * is performed by invoking getIdentifier().resolve(resource). More precisely, the URI resolution process is performed
+     * according to the followings:
+     * <ul>
+     * <li>If the URI starts with a trailing / character, it is considered to be relative to the root of artifacts, which is {@code /}
+     * So if the reference URI is {@code /icons/myIcon.png} than it is resolved as {@code /icons/myIcon.png}</li>
+     * <li>If the URI does not starts with a trailing / character, it is considered to be relative to the identifier URI
+     * of the artifact.</li>
+     * <ul>
+     * <li>If this artifact URI represents a domain, like {@code /my-component/} for instance, and the reference URI is
+     * {@code icons/myIcon.png} than it is resolved as {@code /my-component/icons/myIcon.png}</li>
+     * <li>If this artifact URI represents a resource like {@code /documents/tutorial.pdf}, than the given URI is considered to be relative
+     * to the immediate parent fragment of identifier URI for this resource. In this case, if the reference URI is {@code icons/myIcon.png}
+     * than it is resolved as {@code /documents/icons/myIcon.png}</li>
+     * </ul>
+     * </ul>
      *
-     * @param resource
-     * @return
+     * @param uri uri to resolve against identifier URI of this artifact
+     * @return resolved uri
      */
-    URI resolve(URI resource);
+    default URI resolve(URI uri) {
+        return getIdentifier().resolve(uri);
+    }
 
     /**
      * Constructs a relative path string from the given URI if and only if the given URI is in the domain of this artifact.
      * The relative path string is used to locate resource URL through getResource method.
+     *
      * @param uri
      * @return
      */
-    Optional<String> toRelativePath(URI uri);
+    default Optional<String> toRelativePath(URI uri) {
+        URI relativize = getIdentifier().relativize(uri);
+        return uri.equals(relativize) ? Optional.empty() : Optional.of(relativize.toString());
+    }
 
     /**
      * Resolves the given path to a URL. The given path is relative to the component identifier URI
@@ -78,7 +98,8 @@ public interface Artifact extends Comparable<Artifact>, JsonSerializable {
     default JsonObject toJson() {
         JsonObjectBuilder builder = Json.createObjectBuilder()
                 .add("identifier", getIdentifier().toString())
-                .add("title", getTitle());
+                .add("title", getTitle())
+                .add("type", getClass().getSimpleName().toLowerCase());
 
         if (getIcon() != null) {
             builder.add("icon", resolve(getIcon()).toString());

@@ -14,7 +14,7 @@ import java.util.TreeSet;
 import java.util.stream.Collectors;
 
 @ApplicationScoped
-public class ComponentCreatedEventListener implements PathWatchService.EventListener {
+public class ArtifactCreatedEventListener implements PathWatchService.EventListener {
     @Inject
     TaskManager taskManager;
     @Inject

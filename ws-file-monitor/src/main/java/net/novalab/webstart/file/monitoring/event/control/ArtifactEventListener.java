@@ -13,9 +13,9 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 @ApplicationScoped
-public class ComponentPathManagementEventListener {
+public class ArtifactEventListener {
 
-    private static final Logger LOGGER = Logger.getLogger(ComponentPathManagementEventListener.class.getName());
+    private static final Logger LOGGER = Logger.getLogger(ArtifactEventListener.class.getName());
 
     @Inject
     PathWatchService pathWatchService;
