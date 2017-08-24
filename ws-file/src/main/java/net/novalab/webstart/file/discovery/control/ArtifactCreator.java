@@ -7,5 +7,5 @@ import java.util.List;
 import java.util.function.Function;
 import java.util.stream.Stream;
 
-public interface ArtifactCreator extends Function<File, List<? extends FileBasedArtifact>> {
+public interface ArtifactCreator extends Function<File, Stream<? extends FileBasedArtifact>> {
 }

@@ -31,7 +31,7 @@ public class ArtifactCreatedEventListener implements PathWatchService.EventListe
         Path pathToScan = parent.subpath(0, parent.getNameCount() + 1);
 
         taskManager.add(new Task(e.getPath(), "Create components for " + pathToScan, () -> {
-            fileBasedComponentSupplier.loadComponents(pathToScan);
+            fileBasedComponentSupplier.load(pathToScan);
         }));
     }
 

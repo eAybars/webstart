@@ -27,7 +27,7 @@ public class FileBasedComponentService {
         } else {
             File file = new File(componentSupplier.root().toFile(), path);
             if (file.exists() && file.isDirectory()) {
-                componentSupplier.reloadComponents(file.toPath());
+                componentSupplier.reload(file.toPath());
             } else {
                 return Response.status(Response.Status.NOT_FOUND).build();
             }
@@ -39,11 +39,11 @@ public class FileBasedComponentService {
     @Path("update")
     public Response update(String path) {
         if (path == null) {
-            componentSupplier.updateComponents(componentSupplier.root());
+            componentSupplier.update(componentSupplier.root());
         } else {
             File file = new File(componentSupplier.root().toFile(), path);
             if (file.exists() && file.isDirectory()) {
-                componentSupplier.updateComponents(file.toPath());
+                componentSupplier.update(file.toPath());
             } else {
                 return Response.status(Response.Status.NOT_FOUND).build();
             }
@@ -55,11 +55,11 @@ public class FileBasedComponentService {
     @Path("unload")
     public Response unload(String path) {
         if (path == null) {
-            componentSupplier.unloadComponents(componentSupplier.root());
+            componentSupplier.unload(componentSupplier.root());
         } else {
             File file = new File(componentSupplier.root().toFile(), path);
             if (file.exists() && file.isDirectory()) {
-                componentSupplier.unloadComponents(file.toPath());
+                componentSupplier.unload(file.toPath());
             } else {
                 return Response.status(Response.Status.NOT_FOUND).build();
             }

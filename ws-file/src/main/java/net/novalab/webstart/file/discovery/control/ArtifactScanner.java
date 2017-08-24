@@ -26,26 +26,26 @@ public class ArtifactScanner extends AbstractArtifactCreator {
     Instance<ArtifactCreator> componentCreators;
 
     @Override
-    public List<? extends FileBasedArtifact> apply(File folder) {
+    public Stream<? extends FileBasedArtifact> apply(File folder) {
         List<FileBasedArtifact> components = new LinkedList<>();
 
         StreamSupport.stream(componentCreators.spliterator(), false)
                 .filter(((Predicate<ArtifactCreator>)ArtifactScanner.class::isInstance).negate())
-                .flatMap(cc -> cc.apply(folder).stream())
+                .flatMap(cc -> cc.apply(folder))
                 .filter(Objects::nonNull)
                 .forEach(components::add);
 
         boolean addedComponent = !components.isEmpty();
 
         Stream.of(folder.listFiles(File::isDirectory))
-                .map(this::apply)
-                .forEach(components::addAll);
+                .flatMap(this::apply)
+                .forEach(components::add);
 
         if (!addedComponent && !components.isEmpty()) {
             components.add(0, new FileBasedComponent(toIdentifier(folder), folder));
         }
 
-        return components;
+        return components.stream();
     }
 
 }

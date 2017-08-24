@@ -17,7 +17,10 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.function.Consumer;
 import java.util.function.Function;
+import java.util.function.Predicate;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -32,20 +35,20 @@ public class FileBasedArtifactSupplier implements ArtifactSupplier {
     ArtifactScanner artifactScanner;
 
 
-    private List<FileBasedArtifact> components;
+    private List<FileBasedArtifact> artifacts;
 
     public FileBasedArtifactSupplier() {
-        components = new CopyOnWriteArrayList<>();
+        artifacts = new CopyOnWriteArrayList<>();
     }
 
     @Override
     public Stream<? extends FileBasedArtifact> get() {
-        return components.stream();
+        return artifacts.stream();
     }
 
 
     public Optional<FileBasedArtifact> findComponent(Path path) {
-        return components.stream()
+        return artifacts.stream()
                 .filter(c -> c.getIdentifierFile().toPath().equals(path))
                 .findFirst();
     }
@@ -58,46 +61,50 @@ public class FileBasedArtifactSupplier implements ArtifactSupplier {
     public void reloadAll() {
         Stream.of(artifactScanner.getArtifactRoot().listFiles(File::isDirectory))
                 .map(File::toPath)
-                .forEach(this::reloadComponents);
+                .forEach(this::reload);
     }
 
 
-    public void reloadComponents(Path path) {
-        unloadComponents(path);
-        loadComponents(path);
+    public void reload(Path path) {
+        unload(path);
+        load(path);
     }
 
-    public void loadComponents(Path path) {
-        List<? extends FileBasedArtifact> components = artifactScanner.apply(path.toFile());
-        this.components.addAll(components);
+    public void load(Path path) {
+        List<? extends FileBasedArtifact> artifacts = artifactScanner.apply(path.toFile())
+                .filter(((Predicate<FileBasedArtifact>)this.artifacts::contains).negate())
+                .collect(Collectors.toList());
+        this.artifacts.addAll(artifacts);
         Event<Artifact> loadEvent = artifactEvent.select(ArtifactEvent.Literal.LOADED);
-        components.forEach(loadEvent::fire);
+        artifacts.forEach(a -> LOGGER.log(Level.INFO, "Loaded artifact " + a));
+        artifacts.forEach(loadEvent::fire);
     }
 
-    public void unloadComponents(Path path) {
-        Set<FileBasedArtifact> components = this.components.stream()
+    public void unload(Path path) {
+        Set<FileBasedArtifact> artifacts = this.artifacts.stream()
                 .filter(c -> c.getIdentifierFile().toPath().startsWith(path))
                 .collect(Collectors.toSet());
         Event<Artifact> unloadEvent = artifactEvent.select(ArtifactEvent.Literal.UNLOADED);
-        this.components.removeAll(components);
-        components.forEach(unloadEvent::fire);
+        this.artifacts.removeAll(artifacts);
+        artifacts.forEach(a -> LOGGER.log(Level.INFO, "Unloaded artifact " + a));
+        artifacts.forEach(unloadEvent::fire);
     }
 
-    public void updateComponents(Path path) {
-        Map<Path, FileBasedArtifact> existing = components.stream()
+    public void update(Path path) {
+        Map<Path, FileBasedArtifact> existing = artifacts.stream()
                 .filter(c -> c.getIdentifierFile().toPath().startsWith(path))
                 .collect(Collectors.toMap(c -> c.getIdentifierFile().toPath(), Function.identity()));
         Map<Path, FileBasedArtifact> loaded = artifactScanner.apply(path.toFile())
-                .stream()
                 .collect(Collectors.toMap(c -> c.getIdentifierFile().toPath(), Function.identity()));
 
         //process updates
         Event<Artifact> updateEvent = artifactEvent.select(ArtifactEvent.Literal.UPDATED);
-        this.components.replaceAll(c -> loaded.getOrDefault(c.getIdentifierFile().toPath(), c));
+        this.artifacts.replaceAll(c -> loaded.getOrDefault(c.getIdentifierFile().toPath(), c));
         loaded.entrySet().stream()
                 .filter(e -> existing.containsKey(e.getKey()))
                 .map(Map.Entry::getValue)
-                .forEach(updateEvent::fire);
+                .forEach(((Consumer<Artifact>)updateEvent::fire)
+                        .andThen(a -> LOGGER.log(Level.INFO, "Updated artifact " + a)));
 
         //process unloaded
         Event<Artifact> unloadEvent = artifactEvent.select(ArtifactEvent.Literal.UNLOADED);
@@ -105,8 +112,9 @@ public class FileBasedArtifactSupplier implements ArtifactSupplier {
                 .filter(e -> !loaded.containsKey(e.getKey()))
                 .map(Map.Entry::getValue)
                 .collect(Collectors.toSet());
-        components.removeAll(unloadedComponents);
+        artifacts.removeAll(unloadedComponents);
         unloadedComponents.forEach(unloadEvent::fire);
+        unloadedComponents.forEach(a -> LOGGER.log(Level.INFO, "Unloaded artifact " + a));
 
         //process loaded
         Event<Artifact> loadEvent = artifactEvent.select(ArtifactEvent.Literal.LOADED);
@@ -114,7 +122,8 @@ public class FileBasedArtifactSupplier implements ArtifactSupplier {
                 .filter(e -> !existing.containsKey(e.getKey()))
                 .map(Map.Entry::getValue)
                 .collect(Collectors.toSet());
-        components.addAll(loadedComponents);
+        artifacts.addAll(loadedComponents);
         loadedComponents.forEach(loadEvent::fire);
+        loadedComponents.forEach(a -> LOGGER.log(Level.INFO, "Loaded artifact " + a));
     }
 }

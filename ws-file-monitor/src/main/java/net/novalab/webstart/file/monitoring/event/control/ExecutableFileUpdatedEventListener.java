@@ -21,7 +21,7 @@ public class ExecutableFileUpdatedEventListener implements PathWatchService.Even
     @Override
     public void accept(PathWatchServiceEvent e) {
         taskManager.add(new Task(e.getPath(), "Update component(s) for " + e.getPath().getParent(), () -> {
-            fileBasedComponentSupplier.updateComponents(e.getPath().getParent());
+            fileBasedComponentSupplier.update(e.getPath().getParent());
         }));
     }
 

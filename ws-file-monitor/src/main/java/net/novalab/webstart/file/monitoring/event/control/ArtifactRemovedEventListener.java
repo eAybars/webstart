@@ -20,7 +20,7 @@ public class ArtifactRemovedEventListener implements PathWatchService.EventListe
     @Override
     public void accept(PathWatchServiceEvent e) {
         taskManager.add(new Task(e.getPath(), "Remove components for " + e.getPath(), () -> {
-            fileBasedComponentSupplier.unloadComponents(e.getPath());
+            fileBasedComponentSupplier.unload(e.getPath());
         }));
     }
 

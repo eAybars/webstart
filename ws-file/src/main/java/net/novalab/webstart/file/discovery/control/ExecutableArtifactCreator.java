@@ -16,12 +16,10 @@ public class ExecutableArtifactCreator extends AbstractArtifactCreator {
     private static final String EXECUTABLE_FILE_EXTENSION = ".jnlp";
 
     @Override
-    public List<? extends FileBasedArtifact> apply(File folder) {
+    public Stream<? extends FileBasedArtifact> apply(File folder) {
         return Stream.of(folder.listFiles(f -> !f.isDirectory() && f.getName().endsWith(EXECUTABLE_FILE_EXTENSION)))
                 .sorted(Comparator.comparing(File::getName))
-                .findFirst()
                 .map(exe -> new FileBasedExecutable(toIdentifier(folder), folder, exe))
-                .map(Collections::singletonList)
-                .orElse(Collections.emptyList());
+                .limit(1);
     }
 }
