@@ -9,7 +9,7 @@ import java.net.URI;
 public abstract class AbstractArtifactCreator implements ArtifactCreator {
     @Inject
     @ArtifactRoot
-    private File artifactRoot;
+    File artifactRoot;
 
     protected URI toIdentifier(File identifierFile) {
         return URI.create("/" + artifactRoot.toURI().relativize(identifierFile.toURI()));

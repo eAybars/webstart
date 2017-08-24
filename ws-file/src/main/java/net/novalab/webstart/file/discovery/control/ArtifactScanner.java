@@ -23,13 +23,13 @@ public class ArtifactScanner extends AbstractArtifactCreator {
 
     @Inject
     @Any
-    Instance<ArtifactCreator> componentCreators;
+    Instance<ArtifactCreator> artifactCreators;
 
     @Override
     public Stream<? extends FileBasedArtifact> apply(File folder) {
         List<FileBasedArtifact> components = new LinkedList<>();
 
-        StreamSupport.stream(componentCreators.spliterator(), false)
+        StreamSupport.stream(artifactCreators.spliterator(), false)
                 .filter(((Predicate<ArtifactCreator>)ArtifactScanner.class::isInstance).negate())
                 .flatMap(cc -> cc.apply(folder))
                 .filter(Objects::nonNull)

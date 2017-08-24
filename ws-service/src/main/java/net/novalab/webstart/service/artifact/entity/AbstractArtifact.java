@@ -56,4 +56,24 @@ public abstract class AbstractArtifact implements Artifact {
     public void setIcon(URI icon) {
         this.icon = icon;
     }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+
+        AbstractArtifact that = (AbstractArtifact) o;
+
+        return getIdentifier().equals(that.getIdentifier());
+    }
+
+    @Override
+    public int hashCode() {
+        return getIdentifier().hashCode();
+    }
+
+    @Override
+    public String toString() {
+        return getIdentifier().toString();
+    }
 }
