@@ -17,10 +17,20 @@ public abstract class AbstractArtifact implements Artifact {
     public AbstractArtifact(URI identifier) {
         this.identifier = Objects.requireNonNull(identifier);
         String title = identifier.toString();
-        title = title.substring(title.lastIndexOf('/'));
-        int dotIndex = title.lastIndexOf('.');
-        if (dotIndex >= 0) {
-            title = title.substring(0, dotIndex);
+        if ("".equals(title) || title.charAt(0) != '/') {
+            throw new IllegalArgumentException("Identifier URI must start with a / character");
+        }
+
+        if (title.charAt(title.length() - 1) == '/') {
+            int index = title.lastIndexOf('/', title.length() - 2);
+            title = title.substring(index + 1, title.length() - 1);
+        } else {
+            int startIndex = title.lastIndexOf('/');
+            int endIndex = title.lastIndexOf('.');
+            if (endIndex < startIndex) {
+                endIndex = title.length();
+            }
+            title = title.substring(startIndex + 1, endIndex);
         }
         this.title = title;
     }

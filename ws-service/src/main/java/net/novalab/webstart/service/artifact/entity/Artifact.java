@@ -12,7 +12,7 @@ import java.util.Optional;
 /**
  * Represents a web start artifact which provides information or downloadable resources about the item it represents.
  * This may be a grouping component, an executable application, some downloadable resources or any other stuff depending
- * on the subclass. An artifact may have sub artifacts based on the hierarchy of their identifier URIs.
+ * on the subclass. An artifact may have sub artifacts inferred from the hierarchy of their identifier URIs.
  */
 public interface Artifact extends Comparable<Artifact>, JsonSerializable {
 

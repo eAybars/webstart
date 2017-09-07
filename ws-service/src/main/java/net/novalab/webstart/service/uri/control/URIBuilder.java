@@ -1,4 +1,4 @@
-package net.novalab.webstart.service.artifact.control;
+package net.novalab.webstart.service.uri.control;
 
 import java.net.URI;
 import java.net.URISyntaxException;

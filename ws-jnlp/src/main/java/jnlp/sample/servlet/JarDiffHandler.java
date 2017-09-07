@@ -185,6 +185,8 @@ public class JarDiffHandler {
 	String javawsAgent = "javaws";
 	String jwsVer = dreq.getHttpRequest().getHeader("User-Agent");
 
+	if (jwsVer == null) return false;
+
 
 	// check the request is coming from javaws
 	if (!jwsVer.startsWith("javaws-")) {
