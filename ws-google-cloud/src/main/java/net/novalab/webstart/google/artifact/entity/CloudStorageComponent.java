@@ -1,12 +1,14 @@
 package net.novalab.webstart.google.artifact.entity;
 
+import net.novalab.webstart.service.artifact.entity.Component;
+
 import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URL;
 import java.util.HashSet;
 import java.util.Set;
 
-public class CloudStorageComponent extends CloudStorageArtifact {
+public class CloudStorageComponent extends CloudStorageArtifact implements Component {
 
     private Set<String> resources;
 

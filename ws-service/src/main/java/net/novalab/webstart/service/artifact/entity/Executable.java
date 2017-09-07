@@ -53,6 +53,7 @@ public interface Executable extends Component {
         }
 
         return objectBuilder
+                .add("type", "executable")
                 .add("executable", resolve(getExecutable()).toString())
                 .add("dateModified", getDateModified().getTime())
                 .build();

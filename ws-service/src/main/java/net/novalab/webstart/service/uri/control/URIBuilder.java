@@ -1,7 +1,9 @@
 package net.novalab.webstart.service.uri.control;
 
+import javax.ws.rs.core.PathSegment;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.util.List;
 
 public class URIBuilder {
 
@@ -17,14 +19,14 @@ public class URIBuilder {
         this.fragment = new StringBuilder();
     }
 
-    public URIBuilder addOriginalPath() {
+    public URIBuilder addPathFromSource() {
         if (uri.getPath() != null) {
             addPath(uri.getPath());
         }
         return this;
     }
 
-    public URIBuilder addParentOfOriginalPath() {
+    public URIBuilder addParentPathFromSource() {
         if (uri.getPath() != null) {
             int index = uri.getPath().lastIndexOf('/');
             if (index >= 0) {
@@ -34,7 +36,7 @@ public class URIBuilder {
         return this;
     }
 
-    public URIBuilder addOriginalQuery() {
+    public URIBuilder addQueryFromSource() {
         if (uri.getQuery() != null) {
             query.append(uri.getQuery());
         }
@@ -51,7 +53,7 @@ public class URIBuilder {
         return this;
     }
 
-    public URIBuilder addOriginalFragment() {
+    public URIBuilder addFragmentFromSource() {
         if (uri.getFragment() != null) {
             fragment.append(uri.getFragment());
         }
@@ -69,12 +71,24 @@ public class URIBuilder {
         return this;
     }
 
-    public static URIBuilder from(String uri) {
-        return new URIBuilder(URI.create(uri));
+    public static URIBuilder from(String uri) throws URISyntaxException {
+        return new URIBuilder(new URI(uri));
     }
 
     public static URIBuilder from(URI uri) {
         return new URIBuilder(uri);
+    }
+
+    public static URIBuilder from(List<PathSegment> segments) throws URISyntaxException {
+        StringBuilder sb = new StringBuilder();
+        segments.stream()
+                .map(PathSegment::getPath)
+                .map("/"::concat)
+                .forEach(sb::append);
+        if (sb.charAt(sb.length() - 1) != '/' && !segments.get(segments.size() - 1).getPath().contains(".")) {
+            sb.append("/");
+        }
+        return new URIBuilder(new URI(sb.toString()));
     }
 
     public URI getUri() {

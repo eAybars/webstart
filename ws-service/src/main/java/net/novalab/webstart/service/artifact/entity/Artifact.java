@@ -98,8 +98,7 @@ public interface Artifact extends Comparable<Artifact>, JsonSerializable {
     default JsonObject toJson() {
         JsonObjectBuilder builder = Json.createObjectBuilder()
                 .add("identifier", getIdentifier().toString())
-                .add("title", getTitle())
-                .add("type", getClass().getSimpleName().toLowerCase());
+                .add("title", getTitle());
 
         if (getIcon() != null) {
             builder.add("icon", resolve(getIcon()).toString());

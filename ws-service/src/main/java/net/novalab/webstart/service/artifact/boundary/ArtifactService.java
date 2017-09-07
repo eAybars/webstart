@@ -7,6 +7,8 @@ import net.novalab.webstart.service.filter.entity.AggregatedFilter;
 import net.novalab.webstart.service.filter.entity.VisibilityFilter;
 import net.novalab.webstart.service.json.control.Pagination;
 import net.novalab.webstart.service.json.entity.JsonErrorResponse;
+import net.novalab.webstart.service.json.entity.JsonSerializable;
+import net.novalab.webstart.service.uri.control.URIBuilder;
 
 import javax.ejb.Stateless;
 import javax.inject.Inject;
@@ -15,9 +17,11 @@ import javax.servlet.http.HttpServletRequest;
 import javax.validation.constraints.Min;
 import javax.ws.rs.*;
 import javax.ws.rs.core.Context;
+import javax.ws.rs.core.PathSegment;
 import javax.ws.rs.core.Response;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.util.List;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
@@ -54,47 +58,34 @@ public class ArtifactService {
     }
 
     @GET
-    @Path("parent")
-    public Response getParent(@QueryParam("component") String componentId) {
-        if (componentId == null) {
-            return Response.status(Response.Status.BAD_REQUEST)
-                    .entity(new JsonErrorResponse("Parent component identifier must be specified").toJson()).build();
-        }
+    @Path("parent/{segments: .+}")
+    public Response getParent(@PathParam("segments") List<PathSegment> segments) {
         try {
-            return artifacts.hierarchy(filter).parent(new URI(componentId.endsWith("/") ? componentId : componentId + "/"))
+            return artifacts.hierarchy(filter).parent(URIBuilder.from(segments).addPathFromSource().build())
+                    .map(JsonSerializable::toJson)
                     .map(Response::ok)
                     .orElse(Response.status(Response.Status.NOT_FOUND))
                     .build();
         } catch (URISyntaxException e) {
-            return Response.status(Response.Status.BAD_REQUEST)
-                    .entity(new JsonErrorResponse(componentId + " is not a valid URI").toJson()).build();
+            return Response.status(Response.Status.BAD_REQUEST).build();
         }
     }
 
     @GET
-    @Path("children")
-    public Response getChildren(@QueryParam("parent") @DefaultValue("/") String parentIdentifier,
+    @Path("children/{segments: .*}")
+    public Response getChildren(@PathParam("segments") List<PathSegment> segments,
                                 @QueryParam("start") @DefaultValue("0") @Min(0) int start,
                                 @QueryParam("size") @DefaultValue("100") @Min(0) int size) {
-        StringBuilder id = new StringBuilder(parentIdentifier);
-        if (id.charAt(0) != '/') {
-            id.insert(0, '/');
-        }
-        if (id.charAt(id.length() - 1) != '/') {
-            id.append('/');
-        }
-
         try {
             return Response.ok(Pagination.of(
                     artifacts.hierarchy(filter)
-                            .children(new URI(id.toString()))
+                            .children(URIBuilder.from(segments).addPathFromSource().build())
                             .sorted()
                             .collect(Collectors.toList())
                     ).startingFrom(start).withSize(size).done()
             ).build();
         } catch (URISyntaxException e) {
-            return Response.status(Response.Status.BAD_REQUEST)
-                    .entity(new JsonErrorResponse(parentIdentifier + " is not a valid URI").toJson()).build();
+            return Response.status(Response.Status.BAD_REQUEST).build();
         }
     }
 
