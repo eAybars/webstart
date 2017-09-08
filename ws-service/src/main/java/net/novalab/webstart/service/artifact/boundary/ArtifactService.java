@@ -6,7 +6,6 @@ import net.novalab.webstart.service.artifact.entity.Artifact;
 import net.novalab.webstart.service.filter.entity.AggregatedFilter;
 import net.novalab.webstart.service.filter.entity.VisibilityFilter;
 import net.novalab.webstart.service.json.control.Pagination;
-import net.novalab.webstart.service.json.entity.JsonErrorResponse;
 import net.novalab.webstart.service.json.entity.JsonSerializable;
 import net.novalab.webstart.service.uri.control.URIBuilder;
 
@@ -18,7 +17,6 @@ import javax.validation.constraints.Min;
 import javax.ws.rs.*;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.PathSegment;
-import javax.ws.rs.core.Response;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.List;
@@ -58,35 +56,49 @@ public class ArtifactService {
     }
 
     @GET
+    @Path("id/{segments: .+}")
+    public JsonObject getArtifact(@PathParam("segments") List<PathSegment> segments) throws URISyntaxException {
+        URI id = URIBuilder.from(segments).addPathFromSource().build();
+        return artifacts.stream()
+                .filter(filter)
+                .filter(a -> a.getIdentifier().equals(id))
+                .map(Artifact::toJson)
+                .findFirst()
+                .orElseThrow(NotFoundException::new);
+    }
+
+    @GET
     @Path("parent/{segments: .+}")
-    public Response getParent(@PathParam("segments") List<PathSegment> segments) {
-        try {
-            return artifacts.hierarchy(filter).parent(URIBuilder.from(segments).addPathFromSource().build())
-                    .map(JsonSerializable::toJson)
-                    .map(Response::ok)
-                    .orElse(Response.status(Response.Status.NOT_FOUND))
-                    .build();
-        } catch (URISyntaxException e) {
-            return Response.status(Response.Status.BAD_REQUEST).build();
-        }
+    public JsonObject getParent(@PathParam("segments") List<PathSegment> segments) throws URISyntaxException {
+        return artifacts.hierarchy(filter)
+                .parent(URIBuilder.from(segments).addPathFromSource().build())
+                .map(JsonSerializable::toJson)
+                .orElseThrow(NotFoundException::new);
+    }
+
+    @GET
+    @Path("children")
+    public JsonObject getChildren(@QueryParam("start") @DefaultValue("0") @Min(0) int start,
+                                  @QueryParam("size") @DefaultValue("100") @Min(0) int size) {
+        return Pagination.of(
+                artifacts.hierarchy(filter)
+                        .children(URI.create("/"))
+                        .sorted()
+                        .collect(Collectors.toList())
+        ).startingFrom(start).withSize(size).done();
     }
 
     @GET
     @Path("children/{segments: .*}")
-    public Response getChildren(@PathParam("segments") List<PathSegment> segments,
-                                @QueryParam("start") @DefaultValue("0") @Min(0) int start,
-                                @QueryParam("size") @DefaultValue("100") @Min(0) int size) {
-        try {
-            return Response.ok(Pagination.of(
-                    artifacts.hierarchy(filter)
-                            .children(URIBuilder.from(segments).addPathFromSource().build())
-                            .sorted()
-                            .collect(Collectors.toList())
-                    ).startingFrom(start).withSize(size).done()
-            ).build();
-        } catch (URISyntaxException e) {
-            return Response.status(Response.Status.BAD_REQUEST).build();
-        }
+    public JsonObject getChildren(@PathParam("segments") List<PathSegment> segments,
+                                  @QueryParam("start") @DefaultValue("0") @Min(0) int start,
+                                  @QueryParam("size") @DefaultValue("100") @Min(0) int size) throws URISyntaxException {
+        return Pagination.of(
+                artifacts.hierarchy(filter)
+                        .children(URIBuilder.from(segments).addPathFromSource().build())
+                        .sorted()
+                        .collect(Collectors.toList())
+        ).startingFrom(start).withSize(size).done();
     }
 
 }

@@ -6,11 +6,13 @@ import net.novalab.webstart.service.artifact.control.ArtifactEvent;
 import net.novalab.webstart.service.artifact.control.ArtifactSupplier;
 import net.novalab.webstart.service.artifact.entity.AbstractArtifact;
 import net.novalab.webstart.service.artifact.entity.Artifact;
+import net.novalab.webstart.service.artifact.entity.ArtifactEventSummary;
 
 import javax.annotation.PostConstruct;
 import javax.enterprise.context.ApplicationScoped;
 import javax.enterprise.event.Event;
 import javax.inject.Inject;
+import java.io.InputStream;
 import java.net.URI;
 import java.util.LinkedList;
 import java.util.List;
@@ -28,7 +30,6 @@ import java.util.stream.Stream;
 @ApplicationScoped
 public class CloudStorageArtifactSupplier implements ArtifactSupplier {
     private static final Logger LOGGER = Logger.getLogger(CloudStorageArtifactSupplier.class.getName());
-
 
     @Inject
     Event<Artifact> artifactEvent;
@@ -48,28 +49,35 @@ public class CloudStorageArtifactSupplier implements ArtifactSupplier {
         return artifacts.stream();
     }
 
+    //post construct requires void return
     @PostConstruct
-    public void reloadAll() {
-        reload(URI.create("/"));
+    public void init() {
+        reloadAll();
+    }
+
+    public ArtifactEventSummary reloadAll() {
+        return reload(URI.create("/"));
     }
 
 
-    public void reload(URI uri) {
-        unload(uri);
-        load(uri);
+    public ArtifactEventSummary reload(URI uri) {
+        return unload(uri).merge(load(uri));
     }
 
-    public void load(URI uri) {
+    public ArtifactEventSummary load(URI uri) {
         List<? extends CloudStorageArtifact> artifacts = artifactScanner.apply(uri)
-                .filter(((Predicate<CloudStorageArtifact>)this.artifacts::contains).negate())
+                .filter(((Predicate<CloudStorageArtifact>) this.artifacts::contains).negate())
                 .collect(Collectors.toList());
         this.artifacts.addAll(artifacts);
         Event<Artifact> loadEvent = artifactEvent.select(ArtifactEvent.Literal.LOADED);
         artifacts.forEach(a -> LOGGER.log(Level.INFO, "Loaded artifact " + a));
         artifacts.forEach(loadEvent::fire);
+        ArtifactEventSummary summary = new ArtifactEventSummary();
+        summary.setLoadedArtifacts(artifacts);
+        return summary;
     }
 
-    public void unload(URI uri) {
+    public ArtifactEventSummary unload(URI uri) {
         Set<CloudStorageArtifact> artifacts = this.artifacts.stream()
                 .filter(c -> c.getIdentifier().toString().startsWith(uri.toString()))
                 .collect(Collectors.toSet());
@@ -77,9 +85,14 @@ public class CloudStorageArtifactSupplier implements ArtifactSupplier {
         this.artifacts.removeAll(artifacts);
         artifacts.forEach(a -> LOGGER.log(Level.INFO, "Unloaded artifact " + a));
         artifacts.forEach(unloadEvent::fire);
+        ArtifactEventSummary summary = new ArtifactEventSummary();
+        summary.setUnloadedArtifacts(artifacts);
+        return summary;
     }
 
-    public void update(URI uri) {
+    public ArtifactEventSummary update(URI uri) {
+        ArtifactEventSummary summary = new ArtifactEventSummary();
+
         Map<URI, CloudStorageArtifact> existing = artifacts.stream()
                 .filter(c -> c.getIdentifier().toString().startsWith(uri.toString()))
                 .collect(Collectors.toMap(AbstractArtifact::getIdentifier, Function.identity()));
@@ -89,10 +102,12 @@ public class CloudStorageArtifactSupplier implements ArtifactSupplier {
         //process updates
         Event<Artifact> updateEvent = artifactEvent.select(ArtifactEvent.Literal.UPDATED);
         this.artifacts.replaceAll(c -> loaded.getOrDefault(c.getIdentifier(), c));
-        loaded.entrySet().stream()
+        summary.setUpdatedArtifacts(loaded.entrySet().stream()
                 .filter(e -> existing.containsKey(e.getKey()))
                 .map(Map.Entry::getValue)
-                .forEach(((Consumer<Artifact>)updateEvent::fire)
+                .collect(Collectors.toList()));
+        summary.getUpdatedArtifacts()
+                .forEach(((Consumer<Artifact>) updateEvent::fire)
                         .andThen(a -> LOGGER.log(Level.INFO, "Updated artifact " + a)));
 
         //process unloaded
@@ -101,6 +116,7 @@ public class CloudStorageArtifactSupplier implements ArtifactSupplier {
                 .filter(e -> !loaded.containsKey(e.getKey()))
                 .map(Map.Entry::getValue)
                 .collect(Collectors.toSet());
+        summary.setUnloadedArtifacts(unloadedComponents);
         artifacts.removeAll(unloadedComponents);
         unloadedComponents.forEach(unloadEvent::fire);
         unloadedComponents.forEach(a -> LOGGER.log(Level.INFO, "Unloaded artifact " + a));
@@ -112,7 +128,10 @@ public class CloudStorageArtifactSupplier implements ArtifactSupplier {
                 .map(Map.Entry::getValue)
                 .collect(Collectors.toSet());
         artifacts.addAll(loadedComponents);
+        summary.setLoadedArtifacts(loadedComponents);
         loadedComponents.forEach(loadEvent::fire);
         loadedComponents.forEach(a -> LOGGER.log(Level.INFO, "Loaded artifact " + a));
+
+        return summary;
     }
 }

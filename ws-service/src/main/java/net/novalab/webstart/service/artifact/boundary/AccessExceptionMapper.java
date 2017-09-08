@@ -1,4 +1,4 @@
-package net.novalab.webstart.file.artifact.boundary;
+package net.novalab.webstart.service.artifact.boundary;
 
 import javax.ejb.EJBAccessException;
 import javax.ws.rs.core.Response;
