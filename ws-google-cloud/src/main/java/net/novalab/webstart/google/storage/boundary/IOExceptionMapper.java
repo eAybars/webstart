@@ -1,4 +1,4 @@
-package net.novalab.webstart.google.artifact.boundary;
+package net.novalab.webstart.google.storage.boundary;
 
 import net.novalab.webstart.service.json.entity.JsonErrorResponse;
 

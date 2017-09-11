@@ -1,29 +1,27 @@
 package net.novalab.webstart.google.artifact.boundary;
 
 import net.novalab.webstart.google.artifact.control.CloudStorageArtifactSupplier;
-import net.novalab.webstart.google.storage.control.ArtifactStorage;
 import net.novalab.webstart.service.uri.control.URIBuilder;
 
-import javax.annotation.security.RolesAllowed;
 import javax.ejb.Stateless;
 import javax.inject.Inject;
 import javax.json.JsonObject;
-import javax.ws.rs.*;
+import javax.ws.rs.POST;
+import javax.ws.rs.Path;
+import javax.ws.rs.PathParam;
+import javax.ws.rs.Produces;
 import javax.ws.rs.core.PathSegment;
-import java.io.IOException;
-import java.io.InputStream;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.List;
 
 @Stateless
 @Path("artifact/gcs")
+@Produces("application/json;charset=utf-8")
 //@RolesAllowed("Admin")
 public class CloudStorageBasedArtifactService {
     @Inject
     CloudStorageArtifactSupplier artifactSupplier;
-    @Inject
-    ArtifactStorage artifactStorage;
 
     @POST
     @Path("reload")
@@ -59,17 +57,5 @@ public class CloudStorageBasedArtifactService {
     @Path("unload/{segments: .+}")
     public JsonObject unload(@PathParam("segments") List<PathSegment> segments) throws URISyntaxException {
         return artifactSupplier.unload(URIBuilder.from(segments).addPathFromSource().build()).toJson();
-    }
-
-    @DELETE
-    @Path("store/{segments: .+}")
-    public JsonObject delete(@PathParam("segments") List<PathSegment> segments) throws URISyntaxException {
-        return artifactStorage.delete(URIBuilder.from(segments).addPathFromSource().build()).toJson();
-    }
-
-    @PUT
-    @Path("store/{segments: .+}")
-    public JsonObject put(@PathParam("segments") List<PathSegment> segments, InputStream is) throws URISyntaxException, IOException {
-        return artifactStorage.put(URIBuilder.from(segments).addPathFromSource().build(), is).toJson();
     }
 }

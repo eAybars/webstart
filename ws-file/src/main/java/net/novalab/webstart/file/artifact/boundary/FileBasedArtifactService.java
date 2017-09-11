@@ -7,10 +7,7 @@ import javax.annotation.security.RolesAllowed;
 import javax.ejb.Stateless;
 import javax.inject.Inject;
 import javax.json.JsonObject;
-import javax.ws.rs.NotFoundException;
-import javax.ws.rs.POST;
-import javax.ws.rs.Path;
-import javax.ws.rs.PathParam;
+import javax.ws.rs.*;
 import javax.ws.rs.core.PathSegment;
 import java.io.File;
 import java.net.URISyntaxException;
@@ -18,6 +15,7 @@ import java.util.List;
 
 @Stateless
 @Path("artifact/local")
+@Produces("application/json;charset=utf-8")
 @RolesAllowed("Admin")
 public class FileBasedArtifactService {
     @Inject
