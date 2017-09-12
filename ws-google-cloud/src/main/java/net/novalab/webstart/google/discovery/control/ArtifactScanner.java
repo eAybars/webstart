@@ -1,7 +1,6 @@
 package net.novalab.webstart.google.discovery.control;
 
 import com.google.cloud.storage.Blob;
-import com.google.cloud.storage.Bucket;
 import net.novalab.webstart.google.artifact.entity.CloudStorageArtifact;
 import net.novalab.webstart.google.artifact.entity.CloudStorageComponent;
 
@@ -9,7 +8,6 @@ import javax.enterprise.context.ApplicationScoped;
 import javax.enterprise.inject.Any;
 import javax.enterprise.inject.Instance;
 import javax.inject.Inject;
-import java.io.File;
 import java.net.URI;
 import java.util.LinkedList;
 import java.util.List;
@@ -21,10 +19,19 @@ import java.util.stream.StreamSupport;
 
 @ApplicationScoped
 public class ArtifactScanner extends AbstractArtifactCreator {
+    private static final URI ROOT = URI.create("/");
 
     @Inject
     @Any
     Instance<ArtifactCreator> artifactCreators;
+
+    public Stream<URI> rootURIs() {
+        return blobs(ROOT)
+                .filter(Blob::isDirectory)
+                .map(Blob::getName)
+                .map("/"::concat)
+                .map(URI::create);
+    }
 
     @Override
     public Stream<? extends CloudStorageArtifact> apply(URI path) {
@@ -49,7 +56,7 @@ public class ArtifactScanner extends AbstractArtifactCreator {
                 .forEach(artifacts::add);
 
 
-        if (!addedComponent && !artifacts.isEmpty()) {
+        if (!addedComponent && !artifacts.isEmpty() && !ROOT.equals(path)) {
             CloudStorageComponent component = new CloudStorageComponent(path);
             blobs.stream()
                     .filter(((Predicate<Blob>)Blob::isDirectory).negate())

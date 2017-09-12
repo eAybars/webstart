@@ -56,7 +56,10 @@ public class CloudStorageArtifactSupplier implements ArtifactSupplier {
     }
 
     public ArtifactEventSummary reloadAll() {
-        return reload(URI.create("/"));
+        return artifactScanner.rootURIs()
+                .map(this::reload)
+                .reduce(ArtifactEventSummary::merge)
+                .orElseGet(ArtifactEventSummary::new);
     }
 
 
