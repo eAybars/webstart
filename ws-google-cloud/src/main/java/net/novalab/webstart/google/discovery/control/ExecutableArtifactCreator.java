@@ -29,7 +29,7 @@ public class ExecutableArtifactCreator extends AbstractArtifactCreator {
     }
 
     private CloudStorageExecutable createExecutable(URI uri, Blob b) {
-        CloudStorageExecutable executable = new CloudStorageExecutable(uri, toArtifactURI(b));
+        CloudStorageExecutable executable = new CloudStorageExecutable(uri, uri.relativize(toArtifactURI(b)));
         executable.setDateModified(new Date(b.getUpdateTime()));
         return executable;
     }
