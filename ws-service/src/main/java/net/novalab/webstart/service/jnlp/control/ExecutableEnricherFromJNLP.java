@@ -21,7 +21,7 @@ public class ExecutableEnricherFromJNLP {
     private static final Logger LOGGER = Logger.getLogger(ExecutableEnricherFromJNLP.class.getName());
 
     public void onExecutableLoaded(@Observes(notifyObserver = Reception.ALWAYS, during = TransactionPhase.IN_PROGRESS)
-                                   @ArtifactEvent(ArtifactEvent.Type.LOADED)
+                                   @ArtifactEvent(ArtifactEvent.Type.LOAD)
                                            Executable executable) {
         try {
             URL url = executable.getResource(executable.getExecutable().toString());

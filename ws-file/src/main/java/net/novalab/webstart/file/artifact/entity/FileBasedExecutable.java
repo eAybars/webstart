@@ -16,8 +16,8 @@ public class FileBasedExecutable extends FileBasedComponent implements Executabl
     private Map<String, Object> attributes;
     private String version;
 
-    public FileBasedExecutable(URI id, File base, File executable) {
-        super(id, base);
+    public FileBasedExecutable(URI id, File executable) {
+        super(id, executable.getParentFile());
         this.executable = executable;
         this.attributes = new TreeMap<>();
         this.version = "";

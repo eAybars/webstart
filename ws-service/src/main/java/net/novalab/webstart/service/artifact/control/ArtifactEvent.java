@@ -12,15 +12,15 @@ import java.lang.annotation.RetentionPolicy;
 @Retention(RetentionPolicy.RUNTIME)
 public @interface ArtifactEvent {
     enum Type {
-        LOADED,
-        UPDATED,
-        UNLOADED
+        LOAD,
+        UPDATE,
+        UNLOAD
     }
 
     class Literal extends AnnotationLiteral<ArtifactEvent> implements ArtifactEvent {
-        public static final Literal LOADED = new Literal(Type.LOADED);
-        public static final Literal UPDATED = new Literal(Type.UPDATED);
-        public static final Literal UNLOADED = new Literal(Type.UNLOADED);
+        public static final Literal LOADED = new Literal(Type.LOAD);
+        public static final Literal UPDATED = new Literal(Type.UPDATE);
+        public static final Literal UNLOADED = new Literal(Type.UNLOAD);
         private static final long serialVersionUID = -7706750348533258773L;
 
         private ArtifactEvent.Type value;

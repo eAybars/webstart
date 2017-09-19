@@ -12,12 +12,10 @@
         <module>ws-service</module>
         <module>ws-jnlp</module>
         <module>ws-file</module>
-        <module>ws-file-monitor</module>
-        <module>ws-app-fm</module>
         <module>ws-security</module>
         <module>ws-google-cloud</module>
+        <module>ws-app-file</module>
         <module>ws-app-gc</module>
-        <module>zip-utility</module>
     </modules>
 
     <dependencies>
