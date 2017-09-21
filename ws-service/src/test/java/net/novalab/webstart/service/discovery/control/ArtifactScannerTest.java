@@ -26,7 +26,7 @@ public class ArtifactScannerTest {
     private ArtifactDiscovery ad1, ad2;
     private Backend backend;
     private Artifact a1, a2;
-    private Component c0, c1, c2, c3;
+    private Component c1, c2, c3;
     private URI root = URI.create(""),
             path1 = URI.create("path1/"),
             path1Sub1 = URI.create("path1/path1Sub1/"),
@@ -56,8 +56,6 @@ public class ArtifactScannerTest {
         when(backend.getName()).thenReturn(URI.create("/test/"));
 
 
-        c0 = mock(Component.class);
-        when(c0.toString()).thenReturn(root.toString());
         c1 = mock(Component.class);
         when(c1.toString()).thenReturn(path1.toString());
         c2 = mock(Component.class);
@@ -65,7 +63,6 @@ public class ArtifactScannerTest {
         c3 = mock(Component.class);
         when(c3.toString()).thenReturn(path2.toString());
 
-        when(backend.createArtifact(Component.class, root)).thenReturn(c0);
         when(backend.createArtifact(Component.class, path1)).thenReturn(c1);
         when(backend.createArtifact(Component.class, path1Sub1)).thenReturn(c2);
         when(backend.createArtifact(Component.class, path2)).thenReturn(c3);
@@ -94,10 +91,9 @@ public class ArtifactScannerTest {
     @Test
     public void apply() throws Exception {
         Set<? extends Artifact> artifacts = artifactScanner.apply(rootBackendURI).collect(Collectors.toSet());
-        assertEquals(6, artifacts.size());
+        assertEquals(5, artifacts.size());
         assertTrue(artifacts.contains(a1));
         assertTrue(artifacts.contains(a2));
-        assertTrue(artifacts.contains(c0));
         assertTrue(artifacts.contains(c1));
         assertTrue(artifacts.contains(c2));
         assertTrue(artifacts.contains(c3));
