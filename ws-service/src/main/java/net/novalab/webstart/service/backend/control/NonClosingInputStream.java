@@ -3,10 +3,10 @@ package net.novalab.webstart.service.backend.control;
 import java.io.IOException;
 import java.io.InputStream;
 
-public class ZipInputStreamWrapper extends InputStream {
+public class NonClosingInputStream extends InputStream {
     private InputStream inputStream;
 
-    public ZipInputStreamWrapper(InputStream inputStream) {
+    public NonClosingInputStream(InputStream inputStream) {
         this.inputStream = inputStream;
     }
 

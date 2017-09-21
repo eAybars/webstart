@@ -40,7 +40,7 @@ public class ArtifactScanner implements ArtifactDiscovery {
                 .flatMap(this::apply)
                 .forEach(artifacts::add);
 
-        if (!addedComponent && !artifacts.isEmpty()) {
+        if (!addedComponent && !artifacts.isEmpty() && !"".equals(backendURI.getUri().toString())) {
             artifacts.add(0, backendURI.getBackend().createArtifact(Component.class, backendURI.getUri()));
         }
 

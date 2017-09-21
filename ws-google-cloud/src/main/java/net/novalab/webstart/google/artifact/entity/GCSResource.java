@@ -4,8 +4,8 @@ import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URL;
 
-public class CloudStorageResource extends CloudStorageArtifact {
-    public CloudStorageResource(URI identifier) {
+public class GCSResource extends GCSArtifact {
+    public GCSResource(URI identifier) {
         super(identifier);
     }
 

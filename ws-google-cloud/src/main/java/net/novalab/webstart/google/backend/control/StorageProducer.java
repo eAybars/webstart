@@ -1,4 +1,4 @@
-package net.novalab.webstart.google.storage.control;
+package net.novalab.webstart.google.backend.control;
 
 import com.google.cloud.storage.Bucket;
 import com.google.cloud.storage.BucketInfo;

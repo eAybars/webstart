@@ -13,7 +13,8 @@ public interface Backend {
     Stream<URI> contents(URI parent);
 
     default boolean isDirectory(URI uri) {
-        return uri.toString().endsWith("/");
+        String s = uri.toString();
+        return "".equals(s) || s.endsWith("/");
     }
 
     <T extends Artifact> T createArtifact(Class<T> type, URI target);

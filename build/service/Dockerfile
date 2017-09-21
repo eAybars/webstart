@@ -11,6 +11,10 @@ RUN curl -L http://downloads.jboss.org/keycloak/$KEYCLOAK_VERSION/adapters/keycl
     && echo "" >> $JBOSS_HOME/bin/app-install.cli \
     && cat $JBOSS_HOME/bin/adapter-install.cli >> $JBOSS_HOME/bin/app-install.cli
 
+RUN cd $JBOSS_HOME/bin \
+    && echo "" >> app-install.cli \
+    && echo "/subsystem=undertow/server=default-server/http-listener=default/:write-attribute(name=max-post-size,value=26214400)" >> app-install.cli
+
 # run wildfly configuration file
 RUN $JBOSS_HOME/bin/jboss-cli.sh --file=$JBOSS_HOME/bin/app-install.cli
 

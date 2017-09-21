@@ -5,6 +5,7 @@ import net.novalab.webstart.service.json.control.Enrich;
 import javax.json.Json;
 import javax.json.JsonObject;
 import javax.json.JsonObjectBuilder;
+import javax.json.JsonValue;
 import java.net.URI;
 import java.util.Date;
 import java.util.Map;
@@ -46,19 +47,26 @@ public interface Executable extends Component {
 
     @Override
     default JsonObject toJson() {
-        JsonObjectBuilder attributes = Json.createObjectBuilder();
-        getAttributes().forEach((k, v) -> attributes.add(k, v.toString()));
 
         JsonObjectBuilder objectBuilder = Enrich.object(Component.super.toJson());
         if (getVersion() != null) {
             objectBuilder.add("version", getVersion());
         }
+        if (getDateModified() != null) {
+            objectBuilder.add("dateModified", getDateModified().getTime());
+        }
+
+        getAttributes().forEach((k, v) -> {
+            if (v instanceof JsonValue) {
+                objectBuilder.add(k, (JsonValue) v);
+            } else {
+                objectBuilder.add(k, v.toString());
+            }
+        });
 
         return objectBuilder
                 .add("type", "executable")
                 .add("executable", resolve(getExecutable()).toString())
-                .add("dateModified", getDateModified().getTime())
-                .add("attributes", attributes)
                 .build();
     }
 }

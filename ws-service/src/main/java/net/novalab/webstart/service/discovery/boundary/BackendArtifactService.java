@@ -7,6 +7,8 @@ import net.novalab.webstart.service.json.entity.JsonErrorResponse;
 import net.novalab.webstart.service.uri.control.URIBuilder;
 
 import javax.ejb.Stateless;
+import javax.ejb.TransactionAttribute;
+import javax.ejb.TransactionAttributeType;
 import javax.inject.Inject;
 import javax.json.JsonObject;
 import javax.ws.rs.*;
@@ -80,6 +82,8 @@ public class BackendArtifactService {
 
     @PUT
     @Path("{segments: .+}")
+    @Consumes("application/octet-stream")
+    @TransactionAttribute(TransactionAttributeType.NEVER)
     public JsonObject put(@PathParam("segments") List<PathSegment> segments, InputStream is) throws URISyntaxException, IOException {
         URI target = URIBuilder.from(segments).addPathFromSource().build();
         Backends.BackendURI backendURI = getBackendURI(target);

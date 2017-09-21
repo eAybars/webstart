@@ -39,7 +39,7 @@ public class FileBasedExecutable extends FileBasedComponent implements Executabl
 
     @Override
     public Date getDateModified() {
-        return new Date(getIdentifierFile().lastModified());
+        return new Date(executable.lastModified());
     }
 
     @Override

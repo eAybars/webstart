@@ -8,12 +8,16 @@ import java.net.URL;
 import java.util.HashSet;
 import java.util.Set;
 
-public class CloudStorageComponent extends CloudStorageArtifact implements Component {
+public class GCSComponent extends GCSArtifact implements Component {
 
     private Set<String> resources;
 
-    public CloudStorageComponent(URI identifier) {
+    public GCSComponent(URI identifier) {
         super(identifier);
+        if ("".equals(identifier.toString()) ||
+                identifier.toString().charAt(identifier.toString().length() - 1) != '/') {
+            throw new IllegalArgumentException("Invalid identifier uri for a component: " + identifier);
+        }
         resources = new HashSet<>();
     }
 

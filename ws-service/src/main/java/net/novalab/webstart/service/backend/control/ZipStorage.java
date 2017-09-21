@@ -1,5 +1,6 @@
 package net.novalab.webstart.service.backend.control;
 
+import java.io.BufferedInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
@@ -22,25 +23,24 @@ public interface ZipStorage extends Storage {
                 //first remove any existing data
                 delete(uri);
 
-                ZipInputStreamWrapper handOverStream = new ZipInputStreamWrapper(stream);
                 do {
-                    String prefix = uri.toString().substring(1);
-                    if (prefix.charAt(prefix.length() - 1) != '/') {
+                    String prefix = uri.toString();
+                    if (!"".equals(prefix) && prefix.charAt(prefix.length() - 1) != '/') {
                         prefix += '/';
                     }
-                    try {
-                        result = storeEntry(new URI(prefix+entry.getName()), handOverStream);
+                    try (InputStream handOverStream = new BufferedInputStream(new NonClosingInputStream(zipInputStream))) {
+                        result = storeEntry(new URI(prefix + entry.getName()), handOverStream);
                     } catch (IOException e) {
                         result = false;
                         throw e;
                     } catch (URISyntaxException e) {
                         result = false;
                         Logger.getLogger(ZipStorage.class.getName())
-                                .log(Level.SEVERE, "Storing of "+uri+" is failed.", e);
+                                .log(Level.SEVERE, "Storing of " + uri + " is failed.", e);
                     }
                     zipInputStream.closeEntry();
                     entry = zipInputStream.getNextEntry();
-                }while (result && entry != null);
+                } while (result && entry != null);
             }
         } finally {
             if (!result) {

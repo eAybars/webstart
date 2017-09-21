@@ -19,6 +19,18 @@ public class URIBuilder {
         this.fragment = new StringBuilder();
     }
 
+    public String getPath() {
+        return path.toString();
+    }
+
+    public String getQuery() {
+        return query.toString();
+    }
+
+    public String getFragment() {
+        return fragment.toString();
+    }
+
     public URIBuilder addPathFromSource() {
         if (uri.getPath() != null) {
             addPath(uri.getPath());
@@ -61,9 +73,10 @@ public class URIBuilder {
     }
 
     public URIBuilder addPath(String path) {
-        if (!uri.isOpaque()) {
-            if (this.path.length() > 0 &&
-                    !(this.path.charAt(this.path.length() - 1) == '/' || path.charAt(0) == '/')) {
+        if (!uri.isOpaque() && path.length() > 0) {
+            if (path.charAt(0) != '/' && (this.path.length() == 0
+                    ? (uri.getScheme() != null || uri.getAuthority() != null)
+                    : this.path.charAt(this.path.length() - 1) != '/')) {
                 this.path.append('/');
             }
             this.path.append(path);
@@ -104,23 +117,21 @@ public class URIBuilder {
         if (uri.isOpaque()) {
             builder.append(uri.getSchemeSpecificPart());
         } else {
-            if (uri.getAuthority() != null) {
+            if (uri.getScheme() != null || uri.getAuthority() != null) {
                 builder.append("//");
+            }
+            if (uri.getAuthority() != null) {
                 builder.append(uri.getAuthority());
+            }
+            if (this.path.length() > 0) {
+                builder.append(path);
+            }
+            if (this.query.length() > 0) {
+                builder.append("?");
+                builder.append(query);
             }
         }
 
-        if (this.path.length() > 0) {
-            if (builder.length() > 0 &&
-                    !(builder.charAt(builder.length() - 1) == '/' || path.charAt(0) == '/')) {
-                builder.append("/");
-            }
-            builder.append(path);
-        }
-        if (this.query.length() > 0) {
-            builder.append("?");
-            builder.append(query);
-        }
         if (this.fragment.length() > 0) {
             builder.append("#");
             builder.append(fragment);
