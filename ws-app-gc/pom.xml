@@ -21,7 +21,7 @@
     </dependencies>
 
     <build>
-        <finalName>ws</finalName>
+        <finalName>webstart</finalName>
     </build>
 
 </project>

@@ -1,8 +1,12 @@
 package net.novalab.webstart.service.discovery.boundary;
 
+import net.novalab.webstart.service.artifact.entity.Artifact;
 import net.novalab.webstart.service.artifact.entity.ArtifactEventSummary;
 import net.novalab.webstart.service.discovery.control.BackendArtifactSupplier;
 import net.novalab.webstart.service.backend.control.Backends;
+import net.novalab.webstart.service.filter.entity.AggregatedFilter;
+import net.novalab.webstart.service.filter.entity.VisibilityFilter;
+import net.novalab.webstart.service.json.control.Pagination;
 import net.novalab.webstart.service.json.entity.JsonErrorResponse;
 import net.novalab.webstart.service.uri.control.URIBuilder;
 
@@ -11,6 +15,7 @@ import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 import javax.inject.Inject;
 import javax.json.JsonObject;
+import javax.validation.constraints.Min;
 import javax.ws.rs.*;
 import javax.ws.rs.core.PathSegment;
 import javax.ws.rs.core.Response;
@@ -20,6 +25,8 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.List;
 import java.util.Optional;
+import java.util.function.Predicate;
+import java.util.stream.Collectors;
 
 @Stateless
 @Path("artifact/backend")
@@ -31,6 +38,24 @@ public class BackendArtifactService {
 
     @Inject
     Backends backends;
+
+    @Inject
+    @AggregatedFilter
+    @VisibilityFilter
+    Predicate<Artifact> filter;
+
+    @GET
+    @Path("{segments: .+}")
+    public JsonObject getBackendArtifacts(@PathParam("segments") List<PathSegment> segments,
+            @QueryParam("start") @DefaultValue("0") @Min(0) int start,
+                             @QueryParam("size") @DefaultValue("100") @Min(0) int size) throws URISyntaxException {
+        return Pagination.of
+                (artifactSupplier.getBackendArtifacts(URIBuilder.from(segments).addPathFromSource().build())
+                        .filter(filter)
+                        .sorted()
+                        .collect(Collectors.toList())
+                ).startingFrom(start).withSize(size).done();
+    }
 
     @POST
     @Path("reload")
@@ -73,7 +98,7 @@ public class BackendArtifactService {
     public JsonObject delete(@PathParam("segments") List<PathSegment> segments) throws URISyntaxException, IOException {
         URI target = URIBuilder.from(segments).addPathFromSource().build();
         Backends.BackendURI backendURI = getBackendURI(target);
-        if (backendURI.getBackend().getStorage().get().delete(backendURI.getUri())){
+        if (backendURI.getBackend().getStorage().get().delete(backendURI.getUri())) {
             return artifactSupplier.unload(target).toJson();
         } else {
             return new ArtifactEventSummary().toJson();
@@ -87,8 +112,13 @@ public class BackendArtifactService {
     public JsonObject put(@PathParam("segments") List<PathSegment> segments, InputStream is) throws URISyntaxException, IOException {
         URI target = URIBuilder.from(segments).addPathFromSource().build();
         Backends.BackendURI backendURI = getBackendURI(target);
-        if (backendURI.getBackend().getStorage().get().store(backendURI.getUri(), is)) {
-            return artifactSupplier.reload(target).toJson();
+        if (backendURI.isDirectory()
+                ? backendURI.getBackend().getStorage().get().storeZip(backendURI.getUri(), is)
+                : backendURI.getBackend().getStorage().get().store(backendURI.getUri(), is)) {
+            URI reloadTarget = backendURI.isDirectory()
+                    ? target
+                    : URIBuilder.from(target).addParentPathFromSource().build();
+            return artifactSupplier.update(reloadTarget).toJson();
         } else {
             return new ArtifactEventSummary().toJson();
         }

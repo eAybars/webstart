@@ -13,7 +13,7 @@
     <artifactId>ws-app-file</artifactId>
 
     <build>
-        <finalName>ws</finalName>
+        <finalName>webstart</finalName>
     </build>
 
     <dependencies>

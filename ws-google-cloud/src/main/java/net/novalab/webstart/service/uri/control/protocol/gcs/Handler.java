@@ -46,12 +46,20 @@ public class Handler extends CDIDelegatingURLStreamHandler {
         }
 
         @Override
-        public long getLastModified() {
+        public String getHeaderField(String name) {
             try {
                 connect();
-                return blob.getUpdateTime();
             } catch (IOException e) {
-                return 0;
+                return super.getHeaderField(name);
+            }
+
+            switch (name) {
+                case "content-type": return blob.getContentType();
+                case "content-length": return blob.getSize().toString();
+                case "content-encoding": return blob.getContentEncoding();
+                case "date": return blob.getCreateTime().toString();
+                case "last-modified": return blob.getUpdateTime().toString();
+                default: return blob.getMetadata().getOrDefault(name, super.getHeaderField(name));
             }
         }
 
