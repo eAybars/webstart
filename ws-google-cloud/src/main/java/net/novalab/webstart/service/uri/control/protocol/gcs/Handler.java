@@ -51,7 +51,12 @@ public class Handler extends CDIDelegatingURLStreamHandler {
 
         @Override
         public long getLastModified() {
-            return blob.getUpdateTime();
+            try {
+                connect();
+                return blob.getUpdateTime();
+            } catch (IOException e) {
+                return 0;
+            }
         }
 
         @Override
