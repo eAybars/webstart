@@ -117,7 +117,7 @@ public class BackendArtifactService {
                 : backendURI.getBackend().getStorage().get().store(backendURI.getUri(), is)) {
             URI reloadTarget = backendURI.isDirectory()
                     ? target
-                    : URIBuilder.from(target).addParentPathFromSource().build();
+                    : URIBuilder.from(target).addParentPathFromSource().addPath("/").build();
             return artifactSupplier.update(reloadTarget).toJson();
         } else {
             return new ArtifactEventSummary().toJson();
