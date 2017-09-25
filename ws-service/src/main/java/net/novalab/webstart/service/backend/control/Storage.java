@@ -30,7 +30,7 @@ public interface Storage {
                         prefix += '/';
                     }
                     try (InputStream handOverStream = new BufferedInputStream(new NonClosingInputStream(zipInputStream))) {
-                        result = store(new URI(prefix + entry.getName()), handOverStream);
+                        result = store(new URI(prefix + entry.getName().replace('\\', '/')), handOverStream);
                     } catch (IOException e) {
                         result = false;
                         throw e;
