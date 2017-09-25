@@ -12,9 +12,13 @@ import java.io.OutputStream;
 import java.net.URL;
 import java.net.URLConnection;
 import java.nio.channels.Channels;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 
 public class Handler extends CDIDelegatingURLStreamHandler {
     public static final String PROTOCOL_NAME = "gcs";
+    private static final DateFormat DATE_FORMAT = new SimpleDateFormat("E, dd MMM yyyy hh:mm:ss X");
 
     public static final Handler INSTANCE = new Handler();
 
@@ -46,6 +50,11 @@ public class Handler extends CDIDelegatingURLStreamHandler {
         }
 
         @Override
+        public long getLastModified() {
+            return blob.getUpdateTime();
+        }
+
+        @Override
         public String getHeaderField(String name) {
             try {
                 connect();
@@ -57,8 +66,8 @@ public class Handler extends CDIDelegatingURLStreamHandler {
                 case "content-type": return blob.getContentType();
                 case "content-length": return blob.getSize().toString();
                 case "content-encoding": return blob.getContentEncoding();
-                case "date": return blob.getCreateTime().toString();
-                case "last-modified": return blob.getUpdateTime().toString();
+                case "date": return DATE_FORMAT.format(new Date(blob.getCreateTime()));
+                case "last-modified": return DATE_FORMAT.format(new Date(blob.getContentLanguage()));
                 default: return blob.getMetadata().getOrDefault(name, super.getHeaderField(name));
             }
         }
