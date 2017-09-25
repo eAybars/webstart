@@ -20,9 +20,20 @@ import java.util.logging.Logger;
 public class ExecutableEnricherFromJNLP {
     private static final Logger LOGGER = Logger.getLogger(ExecutableEnricherFromJNLP.class.getName());
 
+    public void onExecutableUpdated(@Observes(notifyObserver = Reception.ALWAYS, during = TransactionPhase.IN_PROGRESS)
+                                   @ArtifactEvent(ArtifactEvent.Type.UPDATE)
+                                           Executable executable) {
+        enrich(executable);
+    }
+
+
     public void onExecutableLoaded(@Observes(notifyObserver = Reception.ALWAYS, during = TransactionPhase.IN_PROGRESS)
                                    @ArtifactEvent(ArtifactEvent.Type.LOAD)
                                            Executable executable) {
+        enrich(executable);
+    }
+
+    private void enrich(@Observes(notifyObserver = Reception.ALWAYS, during = TransactionPhase.IN_PROGRESS) @ArtifactEvent(ArtifactEvent.Type.LOAD) Executable executable) {
         try {
             URL url = executable.getResource(executable.getExecutable().toString());
             if (url != null) {
