@@ -52,11 +52,14 @@ public class Artifacts {
         }
 
         public Optional<Artifact> parent(URI identifier) {
+            return parents(identifier).findFirst();
+        }
+
+        public Stream<Artifact> parents(URI identifier) {
             return componentStream
                     .filter(c -> identifier.toString().startsWith(c.getIdentifier().toString()))
                     .filter(c -> !identifier.equals(c.getIdentifier()))
-                    .sorted(Comparator.reverseOrder())
-                    .findFirst();
+                    .sorted(Comparator.reverseOrder());
         }
 
         public Stream<Artifact> children(URI identifier) {

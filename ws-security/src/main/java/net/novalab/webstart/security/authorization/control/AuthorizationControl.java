@@ -1,7 +1,6 @@
 package net.novalab.webstart.security.authorization.control;
 
 import net.novalab.webstart.security.authorization.entity.AuthorizationModule;
-import net.novalab.webstart.security.authorization.entity.AuthorizationStack;
 import net.novalab.webstart.service.artifact.entity.Artifact;
 import net.novalab.webstart.service.filter.entity.AccessFilter;
 import net.novalab.webstart.service.filter.entity.VisibilityFilter;
@@ -27,6 +26,7 @@ public class AuthorizationControl implements Predicate<Artifact> {
         Iterator<AuthorizationModule> iterator = authorizationStack.iterator();
         boolean optionalStatus = false;
         boolean nonOptionalStatus = true;
+        boolean reqModulesConfigured = false;
 
         while (iterator.hasNext()) {
             AuthorizationModule module = iterator.next();
@@ -36,16 +36,18 @@ public class AuthorizationControl implements Predicate<Artifact> {
                     optionalStatus |= moduleStatus;
                     break;
                 case REQUIRED:
+                    reqModulesConfigured = true;
                     nonOptionalStatus &= moduleStatus;
                     break;
                 case SUFFICIENT:
                     if (nonOptionalStatus && moduleStatus) return true;
                     break;
                 case REQUISITE:
+                    reqModulesConfigured = true;
                     if (!moduleStatus) return false;
                     else nonOptionalStatus &= true;
             }
         }
-        return nonOptionalStatus || optionalStatus;
+        return reqModulesConfigured ? nonOptionalStatus : optionalStatus;
     }
 }
