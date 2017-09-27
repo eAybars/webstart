@@ -1,5 +1,6 @@
-package net.novalab.webstart.security.authorization.entity;
+package net.novalab.webstart.security.authorization.control;
 
+import net.novalab.webstart.security.authorization.entity.ModulePriority;
 import net.novalab.webstart.service.artifact.control.Artifacts;
 import net.novalab.webstart.service.artifact.entity.Artifact;
 
