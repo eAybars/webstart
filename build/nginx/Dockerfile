@@ -6,3 +6,4 @@ RUN yum install -y epel-release && yum -y install nginx && yum clean all
 
 ENTRYPOINT nginx -g "daemon off;"
 EXPOSE 80
+EXPOSE 443
