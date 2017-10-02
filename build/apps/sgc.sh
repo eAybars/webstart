@@ -12,7 +12,7 @@ cd $DIR/../auth && \
     docker build -t eaybars/ws-auth .
 
 # build service
-cp $DIR/../../ws-app-sgc/target/webstart.war $DIR../service/webstart.war && \
+cp $DIR/../../ws-app-sgc/target/webstart.war $DIR/../service/webstart.war && \
     cd $DIR/../service && \
     docker build -t eaybars/ws-service . && \
     rm webstart.war
