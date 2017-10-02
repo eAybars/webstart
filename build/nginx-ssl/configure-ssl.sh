@@ -1,9 +1,11 @@
 #!/usr/bin/env bash
 
-"${DOMAIN_NAME:?Need to set DOMAIN_NAME environment variable to a non-empty value}"
+DOMAIN_NAME="${1:?Need to set DOMAIN_NAME environment variable or script parameter to a non-empty value}"
 
-if [ ! -d "/etc/letsencrypt/live/$DOMAIN_NAME" ]; then
-  "${CONTACT_EMAIL:?Need to set CONTACT_EMAIL environment variable to a non-empty value}"
+if [ ! -d "/etc/letsencrypt/live/$DOMAIN_NAME" ]
+then
+  CONTACT_EMAIL="${2:?Need to set CONTACT_EMAIL environment variable or script parameter to a non-empty value}"
+  printf "Retrieving SSL certificate for $DOMAIN_NAME ...\n"
   touch /etc/nginx/cert.conf && \
     printf "worker_processes 1;\n\
     events { worker_connections  5; }\n\
@@ -12,40 +14,30 @@ if [ ! -d "/etc/letsencrypt/live/$DOMAIN_NAME" ]; then
             server_name $DOMAIN_NAME;\n\
             location ~ /.well-known { allow all; }\n\
         }\n\
-    }" >> /etc/nginx/cert.conf && \
+    }\n" >> /etc/nginx/cert.conf && \
     nginx -c /etc/nginx/cert.conf && \
     certbot certonly -n --webroot --agree-tos --email $CONTACT_EMAIL --webroot-path=/usr/share/nginx/html/ -d $DOMAIN_NAME && \
     nginx -s stop && \
     rm --interactive=never /etc/nginx/cert.conf
-
-    openssl dhparam -out /etc/ssl/certs/dhparam.pem 2048
+else
+    printf "Found SSL certificate for $DOMAIN_NAME\n"
 fi
 
 
 if [ ! -d "/etc/nginx/sites-available" ]; then
-  mkdir /etc/nginx/sites-available /etc/nginx/sites-enabled
+  mkdir /etc/nginx/sites-available
+fi
+if [ ! -d "/etc/nginx/sites-enabled" ]; then
+  mkdir /etc/nginx/sites-enabled
+fi
+if [ ! -d "/etc/nginx/locations" ]; then
+  mkdir /etc/nginx/locations
+fi
 
-  # override main configuration file
-  printf "worker_processes auto;\n\
-            events {\n\
-              worker_connections  1024;\n\
-            }\n\
-            http {\n\
-              sendfile on;\n\
-              tcp_nopush on;\n\
-              tcp_nodelay on;\n\
-              keepalive_timeout 65;\n\
-              types_hash_max_size 2048;\n\
-              include /etc/nginx/mime.types;\n\
-              default_type application/octet-stream;\n\
-              gzip on;\n\
-              gzip_disable "msie6";\n\
-              gzip_types text/plain text/css application/json application/javascript text/xml application/xml application/xml+rss text/javascript;\n\
-              include /etc/nginx/conf.d/*.conf;\n\
-              include /etc/nginx/sites-enabled/*;\n\
-            }\n" > /etc/nginx/nginx.conf
-
-  touch /etc/nginx/sites-available/default_server && \
+if [ ! -f /etc/nginx/sites-available/$DOMAIN_NAME ]
+then
+    printf "Preparing configuration files for $DOMAIN_NAME\n"
+    touch /etc/nginx/sites-available/$DOMAIN_NAME && \
     printf "server {\n\
                 listen 80 default_server;\n\
                 listen [::]:80 default_server;\n\
@@ -56,8 +48,7 @@ if [ ! -d "/etc/nginx/sites-available" ]; then
                 listen 443 ssl default_server;\n\
                 listen [::]:443 ssl default_server;\n\
                 server_name $DOMAIN_NAME;\n\
-                include /etc/nginx/default_locations/*;\n\
-                location ~ /.well-known { allow all; } \n\
+                include /etc/nginx/locations/$DOMAIN_NAME/*;\n\
                 ssl_protocols TLSv1 TLSv1.1 TLSv1.2;\n\
                 ssl_prefer_server_ciphers on;\n\
                 ssl_ciphers \"EECDH+AESGCM:EDH+AESGCM:AES256+EECDH:AES256+EDH\";\n\
@@ -73,8 +64,17 @@ if [ ! -d "/etc/nginx/sites-available" ]; then
                 ssl_dhparam /etc/ssl/certs/dhparam.pem;\n\
                 ssl_certificate /etc/letsencrypt/live/$DOMAIN_NAME/fullchain.pem;\n\
                 ssl_certificate_key /etc/letsencrypt/live/$DOMAIN_NAME/privkey.pem;\n\
-            }"     > /etc/nginx/sites-available/default_server && \
-    ln -s /etc/nginx/sites-available/default_server /etc/nginx/sites-enabled/default_server
+            }\n"     > /etc/nginx/sites-available/$DOMAIN_NAME && \
+    printf "Successfully created configuration files for $DOMAIN_NAME\n"
+else
+    printf "Found configuration files for $DOMAIN_NAME\n"
 fi
 
-nginx -g "daemon off;"
+if [ ! -f /etc/nginx/sites-enabled/$DOMAIN_NAME ]
+then
+    printf "Activating configuration for $DOMAIN_NAME\n";
+    ln -s /etc/nginx/sites-available/$DOMAIN_NAME /etc/nginx/sites-enabled/$DOMAIN_NAME &&
+        printf "Configuration for $DOMAIN_NAME is now active\n";
+else
+    printf "Configuration for $DOMAIN_NAME is active\n";
+fi
