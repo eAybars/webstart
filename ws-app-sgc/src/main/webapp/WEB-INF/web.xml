@@ -9,14 +9,17 @@
             <web-resource-name>Rest API</web-resource-name>
             <url-pattern>/resources/*</url-pattern>
         </web-resource-collection>
-        <web-resource-collection>
-            <web-resource-name>Downloadable items</web-resource-name>
-            <url-pattern>/download/*</url-pattern>
-        </web-resource-collection>
+        <!-- Downloadable items are protected by a servlet filter which requests basic authentication if not authorized.
+         This is useful when requests are initiated by Java Webstart client -->
+        <!--<web-resource-collection>-->
+            <!--<web-resource-name>Downloadable items</web-resource-name>-->
+            <!--<url-pattern>/download/*</url-pattern>-->
+        <!--</web-resource-collection>-->
         <auth-constraint>
             <role-name>admin</role-name>
             <role-name>user</role-name>
         </auth-constraint>
+        <!-- No need for a transport-guarantee if the service is behind an SSL reverse proxy  -->
         <!-- 		<user-data-constraint>
                     <transport-guarantee>CONFIDENTIAL</transport-guarantee>
                 </user-data-constraint> -->
