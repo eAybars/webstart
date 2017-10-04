@@ -10,6 +10,7 @@ import com.eaybars.webstart.service.uri.control.URIBuilder;
 import com.eaybars.webstart.service.artifact.entity.Artifact;
 import com.eaybars.webstart.service.discovery.control.BackendArtifactSupplier;
 
+import javax.annotation.security.RolesAllowed;
 import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
@@ -31,7 +32,7 @@ import java.util.stream.Collectors;
 @Stateless
 @Path("artifact/backend")
 @Produces("application/json;charset=utf-8")
-//@RolesAllowed("Admin")
+@RolesAllowed("admin")
 public class BackendArtifactService {
     @Inject
     BackendArtifactSupplier artifactSupplier;

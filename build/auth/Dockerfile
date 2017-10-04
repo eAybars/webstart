@@ -45,14 +45,11 @@ RUN cd $JBOSS_HOME/bin \
 RUN $JBOSS_HOME/bin/jboss-cli.sh --file=$JBOSS_HOME/bin/app-install.cli \
     && rm -rf $JBOSS_HOME/standalone/configuration/standalone_xml_history/current/
 
-
 # add realm data to import
 ADD realm.json /opt/jboss/keycloak
 ENV _JAVA_OPTIONS="-Dkeycloak.migration.action=import -Dkeycloak.migration.provider=singleFile -Dkeycloak.migration.file=/opt/jboss/keycloak/realm.json -Dkeycloak.migration.strategy=IGNORE_EXISTING"
 
-# clean up
-RUN rm -rf $JBOSS_HOME/standalone/configuration/standalone_xml_history/current/
-
-# example run
+# example run with my sql
 # docker network create webstart
 # docker run -d --net webstart --name webstart-mysql -e MYSQL_ROOT_PASSWORD=changeit -e MYSQL_DATABASE=WEBSTART mysql
+# docker run -d --net webstart --name webstart-auth eaybars/ws-auth
