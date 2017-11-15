@@ -8,5 +8,5 @@ import java.util.stream.Stream;
 /**
  * Created by ertunc on 30/05/17.
  */
-public interface ArtifactSupplier extends Supplier<Stream<? extends Artifact>> {
+public interface ArtifactSupplier extends Supplier<Stream<Artifact>> {
 }

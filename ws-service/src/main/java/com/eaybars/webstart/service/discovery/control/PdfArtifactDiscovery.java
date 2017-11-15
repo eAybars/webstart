@@ -13,11 +13,11 @@ import java.util.stream.Stream;
 @ApplicationScoped
 public class PdfArtifactDiscovery implements ArtifactDiscovery {
     @Override
-    public Stream<? extends Artifact> apply(Backends.BackendURI backendURI) {
+    public Stream<Artifact> apply(Backends.BackendURI backendURI) {
         return backendURI.getBackend().contents(backendURI.getUri())
                 .filter(((Predicate<URI>)backendURI.getBackend()::isDirectory).negate())
                 .filter(c -> c.getPath().endsWith(".pdf"))
-                .map(c -> backendURI.getBackend().createArtifact(Resource.class, c))
+                .map(c -> (Artifact)backendURI.getBackend().createArtifact(Resource.class, c))
                 .filter(Objects::nonNull);
     }
 }

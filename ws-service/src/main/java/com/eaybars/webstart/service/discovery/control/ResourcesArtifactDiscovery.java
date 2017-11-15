@@ -17,7 +17,7 @@ public class ResourcesArtifactDiscovery implements ArtifactDiscovery {
     public static final URI RESOURCES_URI = URI.create("resources/");
 
     @Override
-    public Stream<? extends Artifact> apply(Backends.BackendURI backendURI) {
+    public Stream<Artifact> apply(Backends.BackendURI backendURI) {
         if (RESOURCES_URI.equals(backendURI.getUri())) {
             return Stream.of(backendURI.getBackend().createArtifact(Component.class, backendURI.getUri()));
         }

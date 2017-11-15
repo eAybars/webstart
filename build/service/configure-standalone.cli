@@ -1,0 +1,9 @@
+embed-server --server-config=standalone.xml
+
+/subsystem=undertow/server=default-server/http-listener=default/:write-attribute(name=max-post-size,value=-1)
+
+/subsystem=infinispan/cache-container=artifacts:add(default-cache=default)
+/subsystem=infinispan/cache-container=artifacts/local-cache=default:add()
+/subsystem=infinispan/cache-container=artifacts/local-cache=default/transaction=TRANSACTION:add(mode=BATCH)
+
+stop-embedded-server

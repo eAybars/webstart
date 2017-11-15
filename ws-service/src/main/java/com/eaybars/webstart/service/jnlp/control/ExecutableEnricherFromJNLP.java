@@ -33,27 +33,33 @@ public class ExecutableEnricherFromJNLP {
         enrich(executable);
     }
 
-    private void enrich(@Observes(notifyObserver = Reception.ALWAYS, during = TransactionPhase.IN_PROGRESS) @ArtifactEvent(ArtifactEvent.Type.LOAD) Executable executable) {
+    private void enrich(Executable executable) {
         try {
             URL url = executable.getResource(executable.getExecutable().toString());
             if (url != null) {
                 JNLPInfo jnlpInfo = JNLPInfo.from(url);
                 if (executable instanceof AbstractArtifact) {
                     AbstractArtifact abstractArtifact = (AbstractArtifact) executable;
-                    jnlpInfo.getTitle().ifPresent(abstractArtifact::setTitle);
-                    jnlpInfo.getDescription().ifPresent(abstractArtifact::setDescription);
-                    jnlpInfo.getIcon()
-                            .map(executable.getIdentifier()::relativize)
-                            .ifPresent(abstractArtifact::setIcon);
+                    if (abstractArtifact.getDescription() == null) {
+                        jnlpInfo.getTitle().ifPresent(abstractArtifact::setTitle);
+                        jnlpInfo.getDescription().ifPresent(abstractArtifact::setDescription);
+                    }
+                    if (abstractArtifact.getIcon() == null) {
+                        jnlpInfo.getIcon()
+                                .map(executable.getIdentifier()::relativize)
+                                .ifPresent(abstractArtifact::setIcon);
+                    }
                 }
-                try {
-                    Method setVersion = executable.getClass().getMethod("setVersion", String.class);
-                    setVersion.invoke(executable, jnlpInfo.getVersion());
-                } catch (NoSuchMethodException | IllegalAccessException e) {
-                } catch (InvocationTargetException e) {
-                    LOGGER.log(Level.WARNING, "An error occurred while setting executable version", e);
+                if (executable.getVersion() == null) {
+                    try {
+                        Method setVersion = executable.getClass().getMethod("setVersion", String.class);
+                        setVersion.invoke(executable, jnlpInfo.getVersion());
+                    } catch (NoSuchMethodException | IllegalAccessException e) {
+                    } catch (InvocationTargetException e) {
+                        LOGGER.log(Level.WARNING, "An error occurred while setting executable version", e);
+                    }
                 }
-                jnlpInfo.getVendor().ifPresent(v -> executable.getAttributes().put("vendor", v));
+                jnlpInfo.getVendor().ifPresent(v -> executable.getAttributes().putIfAbsent("vendor", v));
             }
         } catch (IOException | SAXException e) {
             LOGGER.log(Level.WARNING, "An error occurred while parsing the jnlp file", e);

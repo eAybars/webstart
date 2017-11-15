@@ -1,0 +1,10 @@
+embed-server --server-config=standalone-ha.xml
+
+/subsystem=undertow/server=default-server/http-listener=default/:write-attribute(name=max-post-size,value=-1)
+
+/subsystem=infinispan/cache-container=artifacts:add(default-cache=default)
+/subsystem=infinispan/cache-container=artifacts/transport=TRANSPORT:add(stack=kubernetes,lock-timeout=60000)
+/subsystem=infinispan/cache-container=artifacts/replicated-cache=default:add(mode=SYNC,batching=true)
+/subsystem=infinispan/cache-container=artifacts/replicated-cache=default/transaction=TRANSACTION:add(mode=FULL_XA)
+
+stop-embedded-server

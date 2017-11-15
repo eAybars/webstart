@@ -13,12 +13,12 @@ import java.util.stream.Stream;
 @ApplicationScoped
 public class ExecutableArtifactDiscovery implements ArtifactDiscovery {
     @Override
-    public Stream<? extends Artifact> apply(Backends.BackendURI backendURI) {
+    public Stream<Artifact> apply(Backends.BackendURI backendURI) {
         return backendURI.getBackend().contents(backendURI.getUri())
                 .filter(((Predicate<URI>)backendURI.getBackend()::isDirectory).negate())
                 .filter(c -> c.getPath().endsWith(".jnlp"))
                 .sorted()
-                .map(c -> backendURI.getBackend().createArtifact(Executable.class, c))
+                .map(c -> (Artifact)backendURI.getBackend().createArtifact(Executable.class, c))
                 .filter(Objects::nonNull)
                 .limit(1);
     }

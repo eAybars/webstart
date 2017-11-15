@@ -23,7 +23,7 @@ public class ArtifactScanner implements ArtifactDiscovery {
     Instance<ArtifactDiscovery> discoveries;
 
     @Override
-    public Stream<? extends Artifact> apply(Backends.BackendURI backendURI) {
+    public Stream<Artifact> apply(Backends.BackendURI backendURI) {
         List<Artifact> artifacts = new LinkedList<>();
 
         StreamSupport.stream(discoveries.spliterator(), false)

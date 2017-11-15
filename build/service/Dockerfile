@@ -1,23 +1,11 @@
-FROM jboss/wildfly:10.1.0.Final
+FROM jboss/keycloak-adapter-wildfly:3.3.0.Final
 
-# create wildfly configuration cli file
-RUN touch $JBOSS_HOME/bin/app-install.cli \
-    && echo "embed-server --server-config=standalone.xml" >> $JBOSS_HOME/bin/app-install.cli
+COPY configure-standalone.cli $JBOSS_HOME/bin
+COPY configure-standalone-ha.cli $JBOSS_HOME/bin
 
-
-# install Keycloak adapter
-ENV KEYCLOAK_VERSION 3.2.1.Final
-RUN curl -L http://downloads.jboss.org/keycloak/$KEYCLOAK_VERSION/adapters/keycloak-oidc/keycloak-wildfly-adapter-dist-$KEYCLOAK_VERSION.tar.gz | tar -zx -C $JBOSS_HOME \
-    && echo "" >> $JBOSS_HOME/bin/app-install.cli \
-    && cat $JBOSS_HOME/bin/adapter-install.cli >> $JBOSS_HOME/bin/app-install.cli
-
-# increase the max file size for uplouad - currently set for 25 MB
-RUN cd $JBOSS_HOME/bin \
-    && echo "" >> app-install.cli \
-    && echo "/subsystem=undertow/server=default-server/http-listener=default/:write-attribute(name=max-post-size,value=26214400)" >> app-install.cli
-
-# run wildfly configuration file and cleanup afterwards
-RUN $JBOSS_HOME/bin/jboss-cli.sh --file=$JBOSS_HOME/bin/app-install.cli \
+# rrun configurations and cleanup afterwards
+RUN $JBOSS_HOME/bin/jboss-cli.sh --file=$JBOSS_HOME/bin/configure-standalone.cli \
+    && $JBOSS_HOME/bin/jboss-cli.sh --file=$JBOSS_HOME/bin/configure-standalone-ha.cli \
     && rm -rf $JBOSS_HOME/standalone/configuration/standalone_xml_history/current/
 
 # Default start server command

@@ -8,59 +8,61 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
 
+import static java.util.Collections.emptySet;
+
 public class ArtifactEventSummary implements JsonSerializable {
 
-    private Collection<? extends Artifact> unloadedArtifacts;
-    private Collection<? extends Artifact> loadedArtifacts;
-    private Collection<? extends Artifact> updatedArtifacts;
+    private Set<Artifact> unloadedArtifacts;
+    private Set<Artifact> loadedArtifacts;
+    private Set<Artifact> updatedArtifacts;
 
     public ArtifactEventSummary() {
-        unloadedArtifacts = Collections.emptyList();
-        loadedArtifacts = Collections.emptyList();
-        updatedArtifacts = Collections.emptyList();
+        this(new HashSet<>(), new HashSet<>(), new HashSet<>());
+    }
+
+    private ArtifactEventSummary(Set<Artifact> unloadedArtifacts,
+                                 Set<Artifact> loadedArtifacts,
+                                 Set<Artifact> updatedArtifacts) {
+        this.unloadedArtifacts = unloadedArtifacts;
+        this.loadedArtifacts = loadedArtifacts;
+        this.updatedArtifacts = updatedArtifacts;
+    }
+
+    public static ArtifactEventSummary loadOnly() {
+        return new ArtifactEventSummary(emptySet(), new HashSet<>(), emptySet());
+    }
+
+    public static ArtifactEventSummary unloadOnly() {
+        return new ArtifactEventSummary(new HashSet<>(), emptySet(), emptySet());
     }
 
     public ArtifactEventSummary merge(ArtifactEventSummary other) {
         ArtifactEventSummary merged = new ArtifactEventSummary();
 
-        Set<Artifact> unloaded = new HashSet<>(getUnloadedArtifacts());
-        unloaded.addAll(other.getUnloadedArtifacts());
-        merged.setUnloadedArtifacts(unloaded);
+        merged.getUnloadedArtifacts().addAll(getUnloadedArtifacts());
+        merged.getUnloadedArtifacts().addAll(other.getUnloadedArtifacts());
 
-        Set<Artifact> loaded = new HashSet<>(getLoadedArtifacts());
-        loaded.addAll(other.getLoadedArtifacts());
-        merged.setLoadedArtifacts(loaded);
+        merged.getLoadedArtifacts().addAll(getLoadedArtifacts());
+        merged.getLoadedArtifacts().addAll(other.getLoadedArtifacts());
 
-        Set<Artifact> updated = new HashSet<>(getUpdatedArtifacts());
-        updated.addAll(other.getUpdatedArtifacts());
-        merged.setUpdatedArtifacts(updated);
+        merged.getUpdatedArtifacts().addAll(getUpdatedArtifacts());
+        merged.getUpdatedArtifacts().addAll(other.getUpdatedArtifacts());
 
         return merged;
     }
 
-    public Collection<? extends Artifact> getUnloadedArtifacts() {
+    public Set<Artifact> getUnloadedArtifacts() {
         return unloadedArtifacts;
     }
 
-    public Collection<? extends Artifact> getLoadedArtifacts() {
+    public Set<Artifact> getLoadedArtifacts() {
         return loadedArtifacts;
     }
 
-    public Collection<? extends Artifact> getUpdatedArtifacts() {
+    public Set<Artifact> getUpdatedArtifacts() {
         return updatedArtifacts;
     }
 
-    public void setUnloadedArtifacts(Collection<? extends Artifact> unloadedArtifacts) {
-        this.unloadedArtifacts = unloadedArtifacts;
-    }
-
-    public void setLoadedArtifacts(Collection<? extends Artifact> loadedArtifacts) {
-        this.loadedArtifacts = loadedArtifacts;
-    }
-
-    public void setUpdatedArtifacts(Collection<? extends Artifact> updatedArtifacts) {
-        this.updatedArtifacts = updatedArtifacts;
-    }
 
     @Override
     public JsonObject toJson() {

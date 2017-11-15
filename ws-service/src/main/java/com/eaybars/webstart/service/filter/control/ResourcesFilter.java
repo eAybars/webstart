@@ -14,12 +14,13 @@ import java.util.function.Predicate;
 @VisibilityFilter
 @ApplicationScoped
 public class ResourcesFilter implements Predicate<Artifact> {
+    public static final URI RESOURCES_URI =URI.create("/" + ResourcesArtifactDiscovery.RESOURCES_URI);
     @Inject
     Backends backends;
 
     @Override
     public boolean test(Artifact artifact) {
-        return !ResourcesArtifactDiscovery.RESOURCES_URI.equals(artifact.getIdentifier()) &&
+        return !RESOURCES_URI.equals(artifact.getIdentifier()) &&
                 backends.stream()
                         .map(Backend::getName)
                         .map(uri -> URI.create(uri.toString() + ResourcesArtifactDiscovery.RESOURCES_URI))

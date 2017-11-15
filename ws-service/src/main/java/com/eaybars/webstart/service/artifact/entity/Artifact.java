@@ -5,6 +5,7 @@ import com.eaybars.webstart.service.json.entity.JsonSerializable;
 import javax.json.Json;
 import javax.json.JsonObject;
 import javax.json.JsonObjectBuilder;
+import java.io.Serializable;
 import java.net.URI;
 import java.net.URL;
 import java.util.Optional;
@@ -14,7 +15,7 @@ import java.util.Optional;
  * This may be a grouping component, an executable application, some downloadable resources or any other stuff depending
  * on the subclass. An artifact may have sub artifacts inferred from the hierarchy of their identifier URIs.
  */
-public interface Artifact extends Comparable<Artifact>, JsonSerializable {
+public interface Artifact extends Comparable<Artifact>, JsonSerializable, Serializable {
 
     /**
      * Indicates the domain of the artifact and uniquely identifies it. Must start with a "/" character.
