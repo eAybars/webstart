@@ -43,7 +43,7 @@ public class CacheListener {
     @CacheEntryRemoved
     public void removed(CacheEntryRemovedEvent<URI, Artifact> event) {
         artifactEvent.select(ArtifactEvent.Literal.UNLOADED)
-                .fire(event.getValue());
+                .fire(event.getOldValue());
         LOGGER.log(Level.INFO, "Unloaded artifact " + event.getValue());
     }
 }
