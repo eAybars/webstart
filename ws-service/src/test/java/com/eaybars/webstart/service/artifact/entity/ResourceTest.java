@@ -1,70 +1,59 @@
 package com.eaybars.webstart.service.artifact.entity;
 
-import org.junit.Before;
 import org.junit.Test;
 
+import javax.json.JsonObject;
 import java.net.URI;
-import java.net.URL;
-import java.util.Optional;
+import java.net.URISyntaxException;
 
 import static org.junit.Assert.*;
 
+
 public class ResourceTest {
-    private Resource resource;
-    private URI identifier;
 
-    @Before
-    public void setUp() throws Exception {
-        resource = new TestResource(new URI("/resources/documents/tutorial.pdf?v=1_0"));
+    @Test
+    public void validIdentifierURITest() throws Exception {
+        new Resource(new URI("/resources/documents/tutorial.pdf?v=1_0"));
+        new Resource(new URI("/resources/documents/tutorial.pdf"));
+    }
+
+    @Test(expected = URISyntaxException.class)
+    public void invalidIdentifierURITest() throws Exception {
+        new Resource(new URI("/resources/documents/tutorial.pdf/abc"));
     }
 
     @Test
-    public void resolve() throws Exception {
-        URI resolve = resource.resolve(new URI("images/icon.png"));
-        assertEquals("/resources/documents/images/icon.png", resolve.toString());
+    public void toJsonTest() throws Exception {
+        Resource r = new Resource(new URI("/resources/documents/tutorial.pdf?v=1_0"));
+        JsonObject json = r.toJson();
 
-        resolve = resource.resolve(new URI("/images/icon.png"));
-        assertEquals("/images/icon.png", resolve.toString());
-
-        resource = new TestResource(new URI("/resources/documents/tutorial.pdf"));
-        resolve = resource.resolve(new URI("images/icon.png"));
-        assertEquals("/resources/documents/images/icon.png", resolve.toString());
-
-        resolve = resource.resolve(new URI("/images/icon.png"));
-        assertEquals("/images/icon.png", resolve.toString());
+        assertEquals(3, json.size());
+        assertEquals("/resources/documents/tutorial.pdf?v=1_0", json.getString("identifier"));
+        assertEquals("tutorial", json.getString("title"));
+        assertEquals("resource", json.getString("type"));
+        assertNull(json.get("size"));
     }
 
     @Test
-    public void toRelativePath() throws Exception {
-        Optional<String> path = resource.toRelativePath(new URI("/resources/documents/images/icon.png"));
-        assertNotNull(path);
-        assertFalse(path.isPresent());
+    public void sizeTest() throws Exception {
+        Resource r = new Resource(new URI("/resources/documents/tutorial.pdf?v=1_0"));
+        r.setSize(100);
+        assertEquals(100, r.getSize());
 
-        path = resource.toRelativePath(new URI("/resources/documents/tutorial.pdf"));
-        assertNotNull(path);
-        assertTrue(path.isPresent());
-        assertEquals("", path.get());
+        r.attributes().add("size", 350).build();
 
-        path = resource.toRelativePath(new URI("/resources/documents/tutorial.pdf?v=1_0"));
-        assertNotNull(path);
-        assertTrue(path.isPresent());
-        assertEquals("?v=1_0", path.get());
+        assertEquals(350, r.getSize());
+        try {
+            r.attributes().add("size", "350").build();
+            fail();
+        } catch (IllegalArgumentException e) {
 
-        path = resource.toRelativePath(new URI("/resources/documents/tutorial.pdf?v=2_0"));
-        assertNotNull(path);
-        assertTrue(path.isPresent());
-        assertEquals("?v=2_0", path.get());
-    }
-
-    private static class TestResource extends AbstractArtifact implements Resource {
-
-        public TestResource(URI identifier) {
-            super(identifier);
         }
 
-        @Override
-        public URL getResource(String path) {
-            return null;
+        try {
+            r.attributes().addNull("size").build();
+            fail();
+        } catch (IllegalArgumentException e) {
         }
     }
 }

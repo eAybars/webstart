@@ -40,7 +40,7 @@ public class URIBuilder {
 
     public URIBuilder addParentPathFromSource() {
         if (uri.getPath() != null) {
-            int index = uri.getPath().lastIndexOf('/');
+            int index = uri.getPath().lastIndexOf('/', uri.getPath().length() - 2);
             if (index >= 0) {
                 addPath(uri.getPath().substring(0, index));
             }

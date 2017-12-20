@@ -1,6 +1,6 @@
 package jnlp.sample.util;
 
-import jnlp.sample.servlet.ResourceLocator;
+import jnlp.sample.resource.ResourceLocator;
 
 import javax.servlet.*;
 import javax.servlet.descriptor.JspConfigDescriptor;

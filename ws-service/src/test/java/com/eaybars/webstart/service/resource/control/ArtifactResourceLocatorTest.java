@@ -1,21 +1,23 @@
 package com.eaybars.webstart.service.resource.control;
 
-import com.eaybars.webstart.service.artifact.MockComponentRule;
+import com.eaybars.webstart.service.artifact.MockArtufactRule;
 import com.eaybars.webstart.service.artifact.control.Artifacts;
+import com.eaybars.webstart.service.backend.control.Backend;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
+import org.mockito.ArgumentMatcher;
 
+import java.net.URI;
 import java.net.URISyntaxException;
-import java.util.*;
 import java.util.stream.Stream;
 
-import static org.junit.Assert.*;
+import static com.eaybars.webstart.service.resource.control.ArtifactResourceLocatorTest.URIParentMatcher.of;
 import static org.mockito.Mockito.*;
 
 public class ArtifactResourceLocatorTest {
     @Rule
-    public MockComponentRule mockComponentRule = new MockComponentRule(Stream.of(
+    public MockArtufactRule mockArtufactRule = new MockArtufactRule(Stream.of(
             "/domain1/",
             "/something/",              //1
             "/domain2/",
@@ -30,16 +32,70 @@ public class ArtifactResourceLocatorTest {
 
     private ArtifactResourceLocator resourceLocator;
 
+    private Backend backend;
     private Artifacts artifacts;
 
     @Before
     public void setUp() throws URISyntaxException {
         artifacts = mock(Artifacts.class);
+        Artifacts.Hierarchy hierarchy = mock(Artifacts.Hierarchy.class);
+        when(artifacts.hierarchy()).thenReturn(hierarchy);
 
-        when(artifacts.stream()).thenAnswer(a -> mockComponentRule.getComponents().stream());
+        when(hierarchy.parents(any())).thenAnswer(a -> Stream.empty());
+        when(hierarchy.parents(argThat(of(mockArtufactRule.get(0).getIdentifier()))))
+                .thenAnswer(a -> Stream.of(
+                        mockArtufactRule.get(0)
+                ));
+        when(hierarchy.parents(argThat(of(mockArtufactRule.get(1).getIdentifier()))))
+                .thenAnswer(a -> Stream.of(
+                        mockArtufactRule.get(1)
+                ));
+        when(hierarchy.parents(argThat(of(mockArtufactRule.get(2).getIdentifier()))))
+                .thenAnswer(a -> Stream.of(
+                        mockArtufactRule.get(2)
+                ));
+        when(hierarchy.parents(argThat(of(mockArtufactRule.get(3).getIdentifier()))))
+                .thenAnswer(a -> Stream.of(
+                        mockArtufactRule.get(0),
+                        mockArtufactRule.get(3)
+                ));
+        when(hierarchy.parents(argThat(of(mockArtufactRule.get(4).getIdentifier()))))
+                .thenAnswer(a -> Stream.of(
+                        mockArtufactRule.get(2),
+                        mockArtufactRule.get(4)
+                ));
+        when(hierarchy.parents(argThat(of(mockArtufactRule.get(5).getIdentifier()))))
+                .thenAnswer(a -> Stream.of(
+                        mockArtufactRule.get(0),
+                        mockArtufactRule.get(3),
+                        mockArtufactRule.get(5)
+                ));
+        when(hierarchy.parents(argThat(of(mockArtufactRule.get(6).getIdentifier()))))
+                .thenAnswer(a -> Stream.of(
+                        mockArtufactRule.get(2),
+                        mockArtufactRule.get(4),
+                        mockArtufactRule.get(6)
+                ));
+        when(hierarchy.parents(argThat(of(mockArtufactRule.get(7).getIdentifier()))))
+                .thenAnswer(a -> Stream.of(
+                        mockArtufactRule.get(7)
+                ));
+        when(hierarchy.parents(argThat(of(mockArtufactRule.get(8).getIdentifier()))))
+                .thenAnswer(a -> Stream.of(
+                        mockArtufactRule.get(8)
+                ));
+        when(hierarchy.parents(argThat(of(mockArtufactRule.get(9).getIdentifier()))))
+                .thenAnswer(a -> Stream.of(
+                        mockArtufactRule.get(0),
+                        mockArtufactRule.get(3),
+                        mockArtufactRule.get(9)
+                ));
+
+        when(artifacts.stream()).thenAnswer(a -> mockArtufactRule.getArtifacts().stream());
 
         resourceLocator = new ArtifactResourceLocator();
         resourceLocator.artifacts = artifacts;
+        resourceLocator.backend = backend = mock(Backend.class);
     }
 
 
@@ -48,81 +104,50 @@ public class ArtifactResourceLocatorTest {
         resourceLocator.accessFilter = c -> true;
 
         resourceLocator.apply("/missing/resource.png");
-        mockComponentRule.getComponents().forEach(c -> verify(c, times(0)).getResource(anyString()));
-        resourceLocator.apply("/domain1/sub1/sub-sub1/someresource.jar");
-        mockComponentRule.getComponents().stream()
-                .filter(c -> !c.equals(mockComponentRule.get(5)))
-                .forEach(c -> verify(c, times(0)).getResource(anyString()));
-        verify(mockComponentRule.get(5)).getResource("someresource.jar");
-        resourceLocator.apply("/domain2/sub1/someresource2.jar");
-        verify(mockComponentRule.get(4)).getResource("someresource2.jar");
+        verify(backend, times(0)).getResource(any());
+
+        URI uri = URI.create("/domain1/sub1/sub-sub1/someresource.jar");
+        resourceLocator.apply(uri.toString());
+        verify(backend, times(1)).getResource(uri);
+
+        uri = URI.create("/domain2/sub1/someresource2.jar");
+        resourceLocator.apply(uri.toString());
+        verify(backend).getResource(uri);
     }
 
     @Test
     public void applyWithMiddleTierDomainFiltered() throws Exception {
-        resourceLocator.accessFilter = c -> c != mockComponentRule.get(3);
+        resourceLocator.accessFilter = c -> c != mockArtufactRule.get(3);
 
-        resourceLocator.apply("/domain1/resource1.png");
-        verify(mockComponentRule.get(0)).getResource("resource1.png");
-        verify(mockComponentRule.get(5), times(0)).getResource(anyString());
-        resourceLocator.apply("/domain1/sub1/resource2.png");
-        verify(mockComponentRule.get(3), times(0)).getResource(anyString());
-        verify(mockComponentRule.get(5), times(0)).getResource(anyString());
-        resourceLocator.apply("/domain1/sub1/sub-sub1/resource3.png");
-        verify(mockComponentRule.get(5)).getResource("resource3.png");
+        URI uri = URI.create("/domain1/resource1.png");
+        resourceLocator.apply(uri.toString());
+        verify(backend).getResource(uri);
+
+        uri = URI.create("/domain1/sub1/resource2.png");
+        resourceLocator.apply(uri.toString());
+        verify(backend, times(0)).getResource(uri);
+
+        uri = URI.create("/domain1/sub1/sub-sub1/resource3.png");
+        resourceLocator.apply(uri.toString());
+        verify(backend).getResource(uri);
+
     }
 
-    @Test
-    public void toArtifactAndPath() throws Exception {
-        resourceLocator.accessFilter = c -> true;
+    public static class URIParentMatcher extends ArgumentMatcher<URI> {
+        private URI source;
 
-        Optional<ArtifactResourceLocator.ArtifactResource> resource = resourceLocator.toArtifactResource("/domain1/sub1/sub-sub2/resource.png");
-        assertNotNull(resource);
-        assertTrue(resource.isPresent());
-        assertSame(mockComponentRule.get(9), resource.get().getArtifact());
-        assertEquals("resource.png", resource.get().getPath());
+        public static URIParentMatcher of(URI source) {
+            return new URIParentMatcher(source);
+        }
 
-        resource = resourceLocator.toArtifactResource("/domain1/sub1/resource.png");
-        assertNotNull(resource);
-        assertTrue(resource.isPresent());
-        assertSame(mockComponentRule.get(3), resource.get().getArtifact());
-        assertEquals("resource.png", resource.get().getPath());
+        public URIParentMatcher(URI source) {
+            this.source = source;
+        }
 
-        resource = resourceLocator.toArtifactResource("/domain1/sub2/resource.png");
-        assertNotNull(resource);
-        assertTrue(resource.isPresent());
-        assertSame(mockComponentRule.get(0), resource.get().getArtifact());
-        assertEquals("sub2/resource.png", resource.get().getPath());
-
-        resource = resourceLocator.toArtifactResource("/domain3/sub2/resource.png");
-        assertNotNull(resource);
-        assertFalse(resource.isPresent());
-    }
-
-    @Test
-    public void componentForResourceWithFilter() throws Exception {
-        resourceLocator.accessFilter = c -> c != mockComponentRule.get(9);
-
-        Optional<ArtifactResourceLocator.ArtifactResource> resource = resourceLocator.toArtifactResource("/domain1/sub1/sub-sub2/resource.png");
-        assertNotNull(resource);
-        assertFalse(resource.isPresent());
-
-        resource = resourceLocator.toArtifactResource("/domain1/sub1/resource.png");
-        assertNotNull(resource);
-        assertTrue(resource.isPresent());
-        assertSame(mockComponentRule.get(3), resource.get().getArtifact());
-        assertEquals("resource.png", resource.get().getPath());
-
-        resource = resourceLocator.toArtifactResource("/domain1/sub2/resource.png");
-        assertNotNull(resource);
-        assertTrue(resource.isPresent());
-        assertSame(mockComponentRule.get(0), resource.get().getArtifact());
-        assertEquals("sub2/resource.png", resource.get().getPath());
-
-        resource = resourceLocator.toArtifactResource("/domain3/sub2/resource.png");
-        assertNotNull(resource);
-        assertFalse(resource.isPresent());
-
+        @Override
+        public boolean matches(Object argument) {
+            return argument != null && argument.toString().startsWith(source.toString());
+        }
     }
 
 }

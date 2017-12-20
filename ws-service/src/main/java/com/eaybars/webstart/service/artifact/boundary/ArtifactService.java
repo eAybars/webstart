@@ -1,13 +1,13 @@
 package com.eaybars.webstart.service.artifact.boundary;
 
 import com.eaybars.webstart.service.artifact.control.Artifacts;
+import com.eaybars.webstart.service.artifact.entity.Artifact;
 import com.eaybars.webstart.service.filter.entity.AggregatedFilter;
+import com.eaybars.webstart.service.filter.entity.VisibilityFilter;
 import com.eaybars.webstart.service.json.control.Pagination;
 import com.eaybars.webstart.service.json.entity.JsonSerializable;
 import com.eaybars.webstart.service.uri.control.URIBuilder;
-import jnlp.sample.servlet.JnlpDownloadServlet;
-import com.eaybars.webstart.service.artifact.entity.Artifact;
-import com.eaybars.webstart.service.filter.entity.VisibilityFilter;
+import jnlp.sample.resource.ResourceLocator;
 
 import javax.ejb.Stateless;
 import javax.inject.Inject;
@@ -41,7 +41,7 @@ public class ArtifactService {
     @Path("home")
     @Produces("text/plain")
     public String getHome(@Context HttpServletRequest request) {
-        return request.getContextPath() + JnlpDownloadServlet.PATH;
+        return request.getContextPath() + ResourceLocator.PATH;
     }
 
     @GET

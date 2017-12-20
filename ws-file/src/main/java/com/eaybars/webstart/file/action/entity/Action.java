@@ -1,6 +1,6 @@
 package com.eaybars.webstart.file.action.entity;
 
-import com.eaybars.webstart.service.artifact.control.ArtifactEvent;
+import com.eaybars.webstart.service.artifact.entity.ArtifactEvent;
 
 import java.nio.file.Path;
 import java.util.Date;

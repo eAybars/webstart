@@ -1,46 +1,39 @@
 package com.eaybars.webstart.google.backend.control;
 
+import com.eaybars.webstart.service.backend.control.Backend;
+import com.eaybars.webstart.service.backend.control.Storage;
 import com.google.cloud.storage.Blob;
 import com.google.cloud.storage.Bucket;
 
-import static com.google.cloud.storage.Storage.*;
-
-import com.eaybars.webstart.service.artifact.entity.Artifact;
-import com.eaybars.webstart.service.artifact.entity.Component;
-import com.eaybars.webstart.service.artifact.entity.Executable;
-import com.eaybars.webstart.service.artifact.entity.Resource;
-import com.eaybars.webstart.service.backend.control.Backend;
-import com.eaybars.webstart.service.backend.control.Storage;
-
-import javax.annotation.PostConstruct;
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
+import java.io.IOException;
+import java.net.MalformedURLException;
 import java.net.URI;
-import java.util.*;
-import java.util.function.Function;
+import java.net.URL;
+import java.net.URLStreamHandler;
+import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
+import static com.google.cloud.storage.Storage.BlobListOption;
+
 @ApplicationScoped
 public class GCSBackend implements Backend {
-    public static final URI NAME = URI.create("/gcs/");
-    private static final Function<URI, Artifact> NULL_CREATOR = u -> null;
+    public static final String PROTOCOL_NAME = "gcs";
+    public static final URI NAME = URI.create("/" + PROTOCOL_NAME + "/");
 
     @Inject
     Bucket bucket;
 
     @Inject
+    URLStreamHandler handler;
+
+    @Inject
     GCSStorage storage;
 
-    private Map<Class<?>, Function<URI, Artifact>> creators = new HashMap<>();
-
-    @PostConstruct
-    public void initCreators() {
-        creators.put(Component.class, new ComponentCreator(this));
-        creators.put(Executable.class, new ExecutableCreator(this));
-        creators.put(Resource.class, new ResourceCreator(this));
-    }
 
     @Override
     public URI getName() {
@@ -49,17 +42,27 @@ public class GCSBackend implements Backend {
 
     @Override
     public Stream<URI> contents(URI parent) {
-        return blobContents(parent, BlobListOption.currentDirectory())
-                .map(Blob::getName)
-                .map(URI::create);
+        return isDirectory(parent) ?
+                blobContents(Backend.ROOT.relativize(parent), BlobListOption.currentDirectory())
+                        .map(Blob::getName)
+                        .map(URI::create)
+                        .map(Backend.ROOT::resolve)
+                : Stream.empty();
     }
 
-    public Stream<Blob> blobContents(URI parent, BlobListOption... options) {
-        String path = parent.toString();
-        if (!isDirectory(parent)) {
-            throw new IllegalArgumentException(parent + " is not a path");
+    @Override
+    public URL getResource(URI uri) {
+        try {
+            URL url = new URL(null, PROTOCOL_NAME + "://" + Backend.ROOT.resolve(uri).toString(), handler);
+            url.openConnection().connect();
+            return url;
+        } catch (IOException e) {
+            return null;
         }
-        String searchPath = path.startsWith("/") ? path.substring(1) : path;
+    }
+
+    private Stream<Blob> blobContents(URI parent, BlobListOption... options) {
+        String searchPath = Backend.ROOT.relativize(parent).getPath();
 
         Set<BlobListOption> allOptions = Stream.of(options).collect(Collectors.toSet());
         allOptions.add(BlobListOption.prefix(searchPath));
@@ -70,10 +73,6 @@ public class GCSBackend implements Backend {
                 .filter(b -> !b.getName().equals(searchPath));
     }
 
-    @Override
-    public <T extends Artifact> T createArtifact(Class<T> type, URI target) {
-        return (T) creators.getOrDefault(type, NULL_CREATOR).apply(target);
-    }
 
     @Override
     public Optional<Storage> getStorage() {

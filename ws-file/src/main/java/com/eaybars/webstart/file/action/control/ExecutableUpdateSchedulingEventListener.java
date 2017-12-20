@@ -4,7 +4,7 @@ import com.eaybars.webstart.file.action.entity.Action;
 import com.eaybars.webstart.file.schedule.control.ActionScheduler;
 import com.eaybars.webstart.file.watch.control.PathWatchService;
 import com.eaybars.webstart.file.watch.entity.PathWatchServiceEvent;
-import com.eaybars.webstart.service.artifact.control.ArtifactEvent;
+import com.eaybars.webstart.service.artifact.entity.ArtifactEvent;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;

@@ -1,12 +1,10 @@
 package jnlp.sample.util;
 
-import jnlp.sample.servlet.ResourceLocator;
+import jnlp.sample.resource.ResourceLocator;
 
 import javax.servlet.ServletConfig;
 import javax.servlet.ServletContext;
-import java.net.URL;
 import java.util.Enumeration;
-import java.util.function.Function;
 
 /**
  * Created by ertunc on 25/08/15.

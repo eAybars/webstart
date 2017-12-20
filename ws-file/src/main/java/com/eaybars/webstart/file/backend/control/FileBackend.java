@@ -1,19 +1,14 @@
 package com.eaybars.webstart.file.backend.control;
 
-import com.eaybars.webstart.file.artifact.entity.FileBasedComponent;
-import com.eaybars.webstart.file.artifact.entity.FileBasedExecutable;
-import com.eaybars.webstart.file.artifact.entity.FileBasedResource;
-import com.eaybars.webstart.service.artifact.entity.Artifact;
-import com.eaybars.webstart.service.artifact.entity.Component;
-import com.eaybars.webstart.service.artifact.entity.Executable;
-import com.eaybars.webstart.service.artifact.entity.Resource;
 import com.eaybars.webstart.service.backend.control.Backend;
 import com.eaybars.webstart.service.backend.control.Storage;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 import java.io.File;
+import java.net.MalformedURLException;
 import java.net.URI;
+import java.net.URL;
 import java.util.Optional;
 import java.util.stream.Stream;
 
@@ -28,19 +23,6 @@ public class FileBackend implements Backend {
     @Inject
     FileStorage fileStorage;
 
-    public URI toBackendURI(File file) {
-        return URI.create(NAME.toString() + "/" + root.toURI().relativize(file.toURI()));
-    }
-
-    public URI toArtifactId(File file) {
-        return URI.create("/" + root.toURI().relativize(file.toURI()));
-    }
-
-    public File toFile(URI uri) {
-        return new File(root, getName().relativize(uri).toString());
-    }
-
-
 
     @Override
     public URI getName() {
@@ -49,24 +31,32 @@ public class FileBackend implements Backend {
 
     @Override
     public Stream<URI> contents(URI parent) {
-        File file = new File(root, parent.toString());
+        File file = toFile(parent);
         if (file.isDirectory()) {
             return Stream.of(file.listFiles())
-                    .map(f -> root.toURI().relativize(f.toURI()));
+                    .map(this::toURI);
         }
         return Stream.empty();
     }
 
+    public File toFile(URI uri) {
+        return new File(root, Backend.ROOT.resolve(uri).toString());
+    }
+
+    public URI toURI(File file) {
+        URI relative = root.toURI().relativize(file.toURI());
+        if (relative.equals(file.toURI())) {
+            throw new IllegalArgumentException(file + " is not a sub component of " + root);
+        }
+        return Backend.ROOT.resolve(relative);
+    }
+
     @Override
-    public <T extends Artifact> T createArtifact(Class<T> type, URI target) {
-        File identifierFile = new File(root, target.toString());
-        if (Component.class.equals(type)) {
-            return (T) new FileBasedComponent(toArtifactId(identifierFile), identifierFile);
-        } else if (Executable.class.equals(type)) {
-            return (T) new FileBasedExecutable(toArtifactId(identifierFile.getParentFile()), identifierFile);
-        } else if (Resource.class.equals(type)) {
-            return (T) new FileBasedResource(toArtifactId(identifierFile), identifierFile);
-        } else {
+    public URL getResource(URI uri) {
+        File file = toFile(uri);
+        try {
+            return file.exists() && !file.isDirectory() ? file.toURI().toURL() : null;
+        } catch (MalformedURLException e) {
             return null;
         }
     }
@@ -75,4 +65,5 @@ public class FileBackend implements Backend {
     public Optional<Storage> getStorage() {
         return Optional.of(fileStorage);
     }
+
 }

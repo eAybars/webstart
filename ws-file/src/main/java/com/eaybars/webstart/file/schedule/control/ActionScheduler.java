@@ -3,8 +3,8 @@ package com.eaybars.webstart.file.schedule.control;
 import com.eaybars.webstart.file.action.entity.Action;
 import com.eaybars.webstart.file.backend.control.FileBackend;
 import com.eaybars.webstart.file.watch.control.PathWatchService;
-import com.eaybars.webstart.service.artifact.control.ArtifactEvent;
-import com.eaybars.webstart.service.discovery.control.BackendArtifactSupplier;
+import com.eaybars.webstart.service.artifact.entity.ArtifactEvent;
+import com.eaybars.webstart.service.backend.control.BackendArtifacts;
 
 import javax.annotation.Resource;
 import javax.ejb.*;
@@ -36,7 +36,7 @@ public class ActionScheduler {
     FileBackend fileBackend;
 
     @Inject
-    BackendArtifactSupplier artifactSupplier;
+    BackendArtifacts artifacts;
 
     @Lock(LockType.WRITE)
     public boolean add(Action action) {
@@ -131,16 +131,16 @@ public class ActionScheduler {
 
     private void execute(Action action) {
         remove(action);
-        URI uri = fileBackend.toBackendURI(action.getDomain().toFile());
+        URI uri = fileBackend.toURI(action.getDomain().toFile());
         switch (action.getType()) {
             case LOAD:
-                artifactSupplier.load(uri);
+                artifacts.load(uri);
                 break;
             case UNLOAD:
-                artifactSupplier.unload(uri);
+                artifacts.unload(uri);
                 break;
             case UPDATE:
-                artifactSupplier.update(uri);
+                artifacts.update(uri);
                 break;
         }
     }

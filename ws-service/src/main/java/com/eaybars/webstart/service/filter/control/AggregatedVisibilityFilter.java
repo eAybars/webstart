@@ -19,9 +19,9 @@ public class AggregatedVisibilityFilter implements Predicate<Artifact> {
     Instance<Predicate<Artifact>> componentFilters;
 
     @Override
-    public boolean test(Artifact component) {
+    public boolean test(Artifact artifact) {
         return StreamSupport.stream(componentFilters.spliterator(), false)
                 .filter(((Predicate<Object>)AggregatedVisibilityFilter.class::isInstance).negate())
-                .allMatch(filter -> filter.test(component));
+                .allMatch(filter -> filter.test(artifact));
     }
 }

@@ -1,8 +1,8 @@
 package com.eaybars.webstart.service.filter.control;
 
+import com.eaybars.webstart.service.artifact.entity.Artifact;
 import com.eaybars.webstart.service.filter.entity.AccessFilter;
 import com.eaybars.webstart.service.filter.entity.AggregatedFilter;
-import com.eaybars.webstart.service.artifact.entity.Artifact;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.enterprise.inject.Instance;
@@ -19,9 +19,9 @@ public class AggregatedAccessFilter implements Predicate<Artifact> {
     Instance<Predicate<Artifact>> componentFilters;
 
     @Override
-    public boolean test(Artifact component) {
+    public boolean test(Artifact artifact) {
         return StreamSupport.stream(componentFilters.spliterator(), false)
                 .filter(((Predicate<Object>)AggregatedAccessFilter.class::isInstance).negate())
-                .allMatch(filter -> filter.test(component));
+                .allMatch(filter -> filter.test(artifact));
     }
 }

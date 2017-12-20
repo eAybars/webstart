@@ -21,7 +21,7 @@
         <dependency>
             <groupId>org.infinispan</groupId>
             <artifactId>infinispan-core</artifactId>
-            <version>RELEASE</version>
+            <version>8.2.4.Final</version>
             <scope>provided</scope>
         </dependency>
     </dependencies>

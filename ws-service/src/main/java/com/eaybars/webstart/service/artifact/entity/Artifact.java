@@ -1,13 +1,16 @@
 package com.eaybars.webstart.service.artifact.entity;
 
+import com.eaybars.webstart.service.json.control.Enrich;
 import com.eaybars.webstart.service.json.entity.JsonSerializable;
 
-import javax.json.Json;
-import javax.json.JsonObject;
-import javax.json.JsonObjectBuilder;
+import javax.json.*;
 import java.io.Serializable;
+import java.math.BigDecimal;
+import java.math.BigInteger;
 import java.net.URI;
-import java.net.URL;
+import java.net.URISyntaxException;
+import java.util.HashMap;
+import java.util.Objects;
 import java.util.Optional;
 
 /**
@@ -15,98 +18,245 @@ import java.util.Optional;
  * This may be a grouping component, an executable application, some downloadable resources or any other stuff depending
  * on the subclass. An artifact may have sub artifacts inferred from the hierarchy of their identifier URIs.
  */
-public interface Artifact extends Comparable<Artifact>, JsonSerializable, Serializable {
+public class Artifact implements Comparable<Artifact>, JsonSerializable, Serializable {
+
+    static {
+        FieldValidation.install(Artifact.class, new HashMap<String, FieldValidator>() {{
+            put("identifier", FieldValidator.READ_ONLY);
+            put("type", FieldValidator.READ_ONLY);
+            put("title", FieldValidator.NON_EMPTY_STRING_VALUE);
+            put("icon", FieldValidator.URI_VALUE);
+            put("description", FieldValidator.STRING_VALUE);
+        }});
+    }
+
+
+    private URI identifier;
+    private JsonObject attributes;
+
+    public Artifact(URI identifier) throws URISyntaxException {
+        this.identifier = Objects.requireNonNull(identifier);
+
+        String idStr = identifier.toString();
+        if ("".equals(idStr) || idStr.charAt(0) != '/') {
+            throw new URISyntaxException(identifier.toString(), "Identifier URI must start with a / character", 0);
+        }
+
+        if (idStr.charAt(idStr.length() - 1) == '/') {
+            int index = idStr.lastIndexOf('/', idStr.length() - 2);
+            idStr = idStr.substring(index + 1, idStr.length() - 1);
+        } else {
+            int startIndex = idStr.lastIndexOf('/');
+            int endIndex = idStr.lastIndexOf('.');
+            if (endIndex < startIndex) {
+                endIndex = idStr.length();
+            }
+            idStr = idStr.substring(startIndex + 1, endIndex);
+        }
+
+        attributes = Json.createObjectBuilder()
+                .add("identifier", identifier.toString())
+                .add("type", getClass().getSimpleName().toLowerCase())
+                .add("title", idStr)
+                .build();
+    }
+
+    protected void setAttributes(JsonObject attributes) {
+        this.attributes = attributes;
+    }
 
     /**
      * Indicates the domain of the artifact and uniquely identifies it. Must start with a "/" character.
      *
      * @return URI identifying the component. May NOT be null
      */
-    URI getIdentifier();
+    public URI getIdentifier() {
+        return identifier;
+    }
+
 
     /**
      * Title of the artifact. For example, this may be a title for an application, grouping component or a resource artifact
      *
      * @return title
      */
-    String getTitle();
+    public String getTitle() {
+        return attributes.getString("title");
+    }
 
     /**
-     * Provides an optional description for the artifact
+     * Title of the artifact. For example, this may be a title for an application, grouping component or a resource artifact
      *
-     * @return description
+     * @param title new title
      */
-    String getDescription();
+    public void setTitle(String title) {
+        attributes().add("title", title).build();
+    }
 
     /**
      * Provides a URI to the icon representation for the artifact.
      *
      * @return icon representation of this artifact
      */
-    URI getIcon();
-
-    /**
-     * Resolves a given URI in accordance to the identifier URI of this artifact and the supplied URI itself. The resolution
-     * is performed by invoking getIdentifier().resolve(resource). More precisely, the URI resolution process is performed
-     * according to the followings:
-     * <ul>
-     * <li>If the URI starts with a trailing / character, it is considered to be relative to the root of artifacts, which is {@code /}
-     * So if the reference URI is {@code /icons/myIcon.png} than it is resolved as {@code /icons/myIcon.png}</li>
-     * <li>If the URI does not starts with a trailing / character, it is considered to be relative to the identifier URI
-     * of the artifact.</li>
-     * <ul>
-     * <li>If this artifact URI represents a domain, like {@code /my-component/} for instance, and the reference URI is
-     * {@code icons/myIcon.png} than it is resolved as {@code /my-component/icons/myIcon.png}</li>
-     * <li>If this artifact URI represents a resource like {@code /documents/tutorial.pdf}, than the given URI is considered to be relative
-     * to the immediate parent fragment of identifier URI for this resource. In this case, if the reference URI is {@code icons/myIcon.png}
-     * than it is resolved as {@code /documents/icons/myIcon.png}</li>
-     * </ul>
-     * </ul>
-     *
-     * @param uri uri to resolve against identifier URI of this artifact
-     * @return resolved uri
-     */
-    default URI resolve(URI uri) {
-        return getIdentifier().resolve(uri);
+    public URI getIcon() {
+        return Optional.ofNullable(attributes.getString("icon", null))
+                .map(URI::create)
+                .orElse(null);
     }
 
     /**
-     * Constructs a relative path string from the given URI if and only if the given URI is in the domain of this artifact.
-     * The relative path string is used to locate resource URL through getResource method.
+     * URI to the icon representation for the artifact.
      *
-     * @param uri
-     * @return
+     * @param icon new icon uri
      */
-    default Optional<String> toRelativePath(URI uri) {
-        URI relativize = getIdentifier().relativize(uri);
-        return uri.equals(relativize) ? Optional.empty() : Optional.of(relativize.toString());
+    public void setIcon(URI icon) {
+        if (icon == null) {
+            attributes().addNull("icon").build();
+        } else {
+            attributes().add("icon", icon.toString()).build();
+        }
     }
 
-    /**
-     * Resolves the given path to a URL. The given path is relative to the component identifier URI
-     *
-     * @param path a path, which is relative to the component identifier URI, to a resource related to this component
-     * @return URL for the resource, or null if the resource could not be located
-     */
-    URL getResource(String path);
+    public JsonObjectBuilder attributes() {
+        return new AttributeBuilder(Enrich.object(attributes));
+    }
+
+    public final JsonObjectBuilder emptyAttributes() {
+        return new AttributeBuilder(baseAttributes());
+    }
+
+    protected JsonObjectBuilder baseAttributes() {
+        return Json.createObjectBuilder()
+                .add("identifier", getIdentifier().toString())
+                .add("type", getClass().getSimpleName().toLowerCase())
+                .add("title", getTitle());
+    }
 
     @Override
-    default int compareTo(Artifact o) {
+    public int compareTo(Artifact o) {
         return getIdentifier().compareTo(o.getIdentifier());
     }
 
     @Override
-    default JsonObject toJson() {
-        JsonObjectBuilder builder = Json.createObjectBuilder()
-                .add("identifier", getIdentifier().toString())
-                .add("title", getTitle());
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
 
-        if (getIcon() != null) {
-            builder.add("icon", resolve(getIcon()).toString());
+        Artifact that = (Artifact) o;
+
+        return getIdentifier().equals(that.getIdentifier());
+    }
+
+    @Override
+    public int hashCode() {
+        return getIdentifier().hashCode();
+    }
+
+    @Override
+    public String toString() {
+        return getIdentifier().toString();
+    }
+
+    /**
+     * Contains arbitrary information alongside some basic ones like identifier, type, title and icon uri. This is the
+     * Json representation of the artifact.
+     *
+     * @return attribute document which is the Json representation of the artifact
+     */
+    @Override
+    public JsonObject toJson() {
+        return attributes;
+    }
+
+    private class AttributeBuilder implements JsonObjectBuilder {
+        private JsonObjectBuilder objectBuilder;
+
+        public AttributeBuilder(JsonObjectBuilder objectBuilder) {
+            this.objectBuilder = objectBuilder;
         }
-        if (getDescription() != null) {
-            builder.add("description", getDescription());
+
+        @Override
+        public JsonObjectBuilder add(String name, JsonValue value) {
+            FieldValidation.getValidator(Artifact.this.getClass(), name).accept(name, value);
+            objectBuilder.add(name, value);
+            return this;
         }
-        return builder.build();
+
+        @Override
+        public JsonObjectBuilder add(String name, String value) {
+            FieldValidation.getValidator(Artifact.this.getClass(), name).accept(name, value);
+            objectBuilder.add(name, value);
+            return this;
+        }
+
+        @Override
+        public JsonObjectBuilder add(String name, BigInteger value) {
+            FieldValidation.getValidator(Artifact.this.getClass(), name).accept(name, value);
+            objectBuilder.add(name, value);
+            return this;
+        }
+
+        @Override
+        public JsonObjectBuilder add(String name, BigDecimal value) {
+            FieldValidation.getValidator(Artifact.this.getClass(), name).accept(name, value);
+            objectBuilder.add(name, value);
+            return this;
+        }
+
+        @Override
+        public JsonObjectBuilder add(String name, int value) {
+            FieldValidation.getValidator(Artifact.this.getClass(), name).accept(name, value);
+            objectBuilder.add(name, value);
+            return this;
+        }
+
+        @Override
+        public JsonObjectBuilder add(String name, long value) {
+            FieldValidation.getValidator(Artifact.this.getClass(), name).accept(name, value);
+            objectBuilder.add(name, value);
+            return this;
+        }
+
+        @Override
+        public JsonObjectBuilder add(String name, double value) {
+            FieldValidation.getValidator(Artifact.this.getClass(), name).accept(name, value);
+            objectBuilder.add(name, value);
+            return this;
+        }
+
+        @Override
+        public JsonObjectBuilder add(String name, boolean value) {
+            FieldValidation.getValidator(Artifact.this.getClass(), name).accept(name, value);
+            objectBuilder.add(name, value);
+            return this;
+        }
+
+        @Override
+        public JsonObjectBuilder addNull(String name) {
+            FieldValidation.getValidator(Artifact.this.getClass(), name).accept(name, null);
+            objectBuilder.addNull(name);
+            return this;
+        }
+
+        @Override
+        public JsonObjectBuilder add(String name, JsonObjectBuilder builder) {
+            FieldValidation.getValidator(Artifact.this.getClass(), name).accept(name, builder);
+            objectBuilder.add(name, builder);
+            return this;
+        }
+
+        @Override
+        public JsonObjectBuilder add(String name, JsonArrayBuilder builder) {
+            FieldValidation.getValidator(Artifact.this.getClass(), name).accept(name, builder);
+            objectBuilder.add(name, builder);
+            return this;
+        }
+
+        @Override
+        public JsonObject build() {
+            JsonObject object = objectBuilder.build();
+            setAttributes(object);
+            return object;
+        }
     }
 }

@@ -4,13 +4,14 @@ import com.eaybars.webstart.service.json.entity.JsonSerializable;
 
 import javax.json.*;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
 
 import static java.util.Collections.emptySet;
 
 public class ArtifactEventSummary implements JsonSerializable {
+
+    public static final ArtifactEventSummary EMPTY = new ArtifactEventSummary(emptySet(), emptySet(), emptySet());
 
     private Set<Artifact> unloadedArtifacts;
     private Set<Artifact> loadedArtifacts;

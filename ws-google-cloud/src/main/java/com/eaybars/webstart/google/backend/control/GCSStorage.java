@@ -1,9 +1,9 @@
 package com.eaybars.webstart.google.backend.control;
 
+import com.eaybars.webstart.service.backend.control.Storage;
 import com.google.cloud.storage.Blob;
 import com.google.cloud.storage.Bucket;
 import com.google.cloud.storage.StorageException;
-import com.eaybars.webstart.service.backend.control.Storage;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;

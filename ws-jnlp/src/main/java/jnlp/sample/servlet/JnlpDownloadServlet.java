@@ -36,15 +36,12 @@
 
 package jnlp.sample.servlet;
 
+import jnlp.sample.resource.ResourceLocator;
 import jnlp.sample.util.DelegateServletConfig;
 
 import java.io.IOException;
-import java.net.URL;
 import java.util.ResourceBundle;
-import java.util.function.Function;
 
-import javax.enterprise.context.SessionScoped;
-import javax.enterprise.inject.Instance;
 import javax.inject.Inject;
 import javax.servlet.ServletConfig;
 import javax.servlet.ServletContext;
@@ -75,8 +72,7 @@ import javax.servlet.http.HttpServletResponse;
 @WebServlet(urlPatterns = JnlpDownloadServlet.URL_PATTERN)
 public class JnlpDownloadServlet extends HttpServlet {
 
-    public static final String PATH = "/download";
-    public static final String URL_PATTERN = JnlpDownloadServlet.PATH +"/*";
+    public static final String URL_PATTERN = ResourceLocator.PATH +"/*";
     private static final long serialVersionUID = -8861514207733806304L;
 
 
