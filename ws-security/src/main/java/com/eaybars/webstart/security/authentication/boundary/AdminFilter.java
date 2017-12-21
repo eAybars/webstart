@@ -9,7 +9,7 @@ import java.io.IOException;
 /**
  * Created by ertunc on 31/08/15.
  */
-@WebFilter(description = "Ensure authentication", urlPatterns = "resources/artifact/backend/*")
+@WebFilter(description = "Ensure authentication", urlPatterns = "/resources/artifact/backend/*")
 public class AdminFilter implements Filter {
 
     FilterConfig config;

@@ -1,5 +1,6 @@
 package com.eaybars.webstart.google.backend.control;
 
+import com.eaybars.webstart.service.backend.control.Backend;
 import com.eaybars.webstart.service.backend.control.Storage;
 import com.google.cloud.storage.Blob;
 import com.google.cloud.storage.Bucket;
@@ -21,7 +22,7 @@ public class GCSStorage implements Storage {
     @Override
     public boolean store(URI uri, InputStream stream) throws IOException {
         try {
-            bucket.create(uri.toString(), stream);
+            bucket.create(Backend.ROOT.relativize(uri).getPath(), stream);
             return true;
         } catch (StorageException e) {
             throw new IOException(e);
@@ -31,7 +32,8 @@ public class GCSStorage implements Storage {
     @Override
     public boolean delete(URI uri) throws IOException {
         return StreamSupport.stream(bucket.list(
-                com.google.cloud.storage.Storage.BlobListOption.prefix(uri.getPath()))
+                com.google.cloud.storage.Storage.BlobListOption.prefix(
+                        Backend.ROOT.relativize(uri).getPath()))
                 .iterateAll().spliterator(), false)
                 .map(Blob::delete)
                 .reduce(Boolean::logicalAnd)

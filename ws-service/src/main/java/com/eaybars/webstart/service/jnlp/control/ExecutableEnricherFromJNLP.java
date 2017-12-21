@@ -24,8 +24,8 @@ public class ExecutableEnricherFromJNLP {
     Backend backend;
 
     public void onExecutableUpdated(@Observes(notifyObserver = Reception.ALWAYS, during = TransactionPhase.IN_PROGRESS)
-                                   @ArtifactEvent(ArtifactEvent.Type.UPDATE)
-                                           Executable executable) {
+                                    @ArtifactEvent(ArtifactEvent.Type.UPDATE)
+                                            Executable executable) {
         enrich(executable);
     }
 
@@ -56,9 +56,12 @@ public class ExecutableEnricherFromJNLP {
 
                 jnlpInfo.getVendor().ifPresent(v -> attributes.add("vendor", v));
                 attributes.build();
+            } else {
+                LOGGER.log(Level.WARNING, "Resource is unreachable: " + executable.getIdentifier().resolve(executable.getExecutable()));
             }
         } catch (IOException | SAXException e) {
-            LOGGER.log(Level.WARNING, "An error occurred while parsing the jnlp file", e);
+            LOGGER.log(Level.WARNING, "Unable to enrich artifact: " + executable);
+            LOGGER.log(Level.WARNING, "An error occurred while parsing the jnlp file " + executable.getIdentifier().resolve(executable.getExecutable()), e);
         }
     }
 }
