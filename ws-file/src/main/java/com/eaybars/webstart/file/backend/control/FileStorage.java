@@ -31,9 +31,9 @@ public class FileStorage implements Storage {
     private boolean delete(File file) {
         if (file.isDirectory()) {
             return Stream.of(file.listFiles())
-                    .map(File::delete)
+                    .map(this::delete)
                     .reduce(Boolean::logicalAnd)
-                    .orElse(true);
+                    .orElse(true) && file.delete();
         } else
             return file.delete();
     }

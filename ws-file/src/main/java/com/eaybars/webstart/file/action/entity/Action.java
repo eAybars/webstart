@@ -25,10 +25,6 @@ public class Action {
         return type;
     }
 
-    public Date getLastActionTime() {
-        return lastActionTime;
-    }
-
     public void updateLastActionTimeToNow() {
         this.lastActionTime = new Date();
     }

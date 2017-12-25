@@ -12,6 +12,7 @@ import javax.ejb.Timer;
 import javax.inject.Inject;
 import java.io.IOException;
 import java.net.URI;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.*;
 import java.util.logging.Level;
@@ -21,7 +22,7 @@ import java.util.stream.Collectors;
 @Singleton
 @ConcurrencyManagement(ConcurrencyManagementType.CONTAINER)
 public class ActionScheduler {
-    private static final long TRIGGER_DURATION = Long.parseLong(System.getProperty("UPDATE_TIMEOUT", "60000"));
+    static final long TRIGGER_DURATION = Long.parseLong(System.getProperty("UPDATE_TIMEOUT", "60000"));
     private static final Logger LOGGER = Logger.getLogger(ActionScheduler.class.getName());
 
     private NavigableMap<Path, Action> actions = new TreeMap<>();
@@ -36,30 +37,30 @@ public class ActionScheduler {
     FileBackend fileBackend;
 
     @Inject
-    BackendArtifacts artifacts;
+    BackendArtifacts backendArtifacts;
 
     @Lock(LockType.WRITE)
     public boolean add(Action action) {
-        Optional<Action> actionOptional = findParentAction(action.getDomain());
-        if (!actionOptional.isPresent() || isSubActionNeeded(actionOptional.get(), action)) {
-            findActionsUnder(action.getDomain()).stream()
-                    .filter(subAction -> !isSubActionNeeded(action, subAction))
-                    .forEach(this::remove);
+        if (isActionRequired(action)) {
+            findActionsUnder(action.getDomain()).forEach(this::remove);
             actions.put(action.getDomain(), action);
-            LOGGER.log(Level.INFO, "Scheduled action: " + action);
             timerService.getTimers().forEach(Timer::cancel);
             timerService.createTimer(TRIGGER_DURATION, null);
-            if (action.getType().equals(ArtifactEvent.Type.UPDATE)) {
-                try {
-                    pathWatchService.unregisterAll(action.getDomain());
-                } catch (Exception e) {
-                    //not important
-                }
-            } else {
-                try {
-                    pathWatchService.register(action.getDomain());
-                } catch (IOException e) {
-                    LOGGER.log(Level.SEVERE, "Unable to register path for listening: " + action.getDomain(), e);
+            LOGGER.log(Level.INFO, "Scheduled action: " + action);
+
+            if (Files.isDirectory(action.getDomain())) {
+                if (action.getType().equals(ArtifactEvent.Type.UNLOAD)) {
+                    try {
+                        pathWatchService.unregisterAll(action.getDomain());
+                    } catch (Exception e) {
+                        //not important
+                    }
+                } else {
+                    try {
+                        pathWatchService.register(action.getDomain());
+                    } catch (IOException e) {
+                        LOGGER.log(Level.SEVERE, "Unable to register path for listening: " + action.getDomain(), e);
+                    }
                 }
             }
 
@@ -68,8 +69,41 @@ public class ActionScheduler {
         return false;
     }
 
-    private boolean isSubActionNeeded(Action parent, Action child) {
-        return parent.getType().compareTo(child.getType()) < 0;
+    /**
+     * Operate according to the following matrix
+     * <p>
+     *                  Self    Sub
+     * ------------------------------
+     * Load, Load	 |	x   |	x
+     * Load, UnLoad	 |	OK	|   x
+     * Load Update	 |	x	|   x
+     * --------------+------+---------
+     * UnLoad UnLoad |	x	|   Na
+     * UnLoad Load	 |	OK	|   Na
+     * UnLoad Update |	Na  |	Na
+     * --------------+------+---------
+     * Update Update |	x   |	x
+     * Update Load	 |	Na	|   x
+     * Update Unload |	x   |	x
+     * --------------+------+---------
+     * <p>
+     * * @param action
+     * * @return
+     */
+    private boolean isActionRequired(Action action) {
+        Optional<Action> actionOptional = findParentAction(action.getDomain());
+        return actionOptional
+                .map(parent -> parent.getDomain().equals(action.getDomain()) &&
+                        !ArtifactEvent.Type.UPDATE.equals(parent.getType()) &&
+                        (ArtifactEvent.Type.LOAD.equals(parent.getType())
+                                ? ArtifactEvent.Type.UNLOAD.equals(action.getType())
+                                : ArtifactEvent.Type.LOAD.equals(action.getType())))
+                .orElse(true);
+    }
+
+    @Lock(LockType.READ)
+    public Action getAction(Path domain) {
+        return actions.get(domain);
     }
 
     @Lock(LockType.READ)
@@ -92,23 +126,23 @@ public class ActionScheduler {
 
     @Lock(LockType.WRITE)
     public void remove(Action action) {
-        if (actions.remove(action.getDomain()) != null) {
+        if (actions.remove(action.getDomain()) != null && Files.isDirectory(action.getDomain())) {
             pathWatchService.unregisterAll(action.getDomain());
         }
     }
 
     @Lock(LockType.WRITE)
     public void removeAll(Set<Action> actions) {
-        actions.stream().map(t -> this.actions.remove(t.getDomain()))
-                .filter(Objects::nonNull)
-                .map(Action::getDomain)
-                .forEach(pathWatchService::unregisterAll);
+        actions.forEach(this::remove);
     }
 
     @Lock(LockType.WRITE)
     public void cancelAll() {
         timerService.getTimers().forEach(Timer::cancel);
-        actions.values().forEach(task -> pathWatchService.unregisterAll(task.getDomain()));
+        actions.values().stream()
+                .map(Action::getDomain)
+                .filter(Files::isDirectory)
+                .forEach(pathWatchService::unregisterAll);
         actions.clear();
     }
 
@@ -134,13 +168,13 @@ public class ActionScheduler {
         URI uri = fileBackend.toURI(action.getDomain().toFile());
         switch (action.getType()) {
             case LOAD:
-                artifacts.load(uri);
+                backendArtifacts.load(uri);
                 break;
             case UNLOAD:
-                artifacts.unload(uri);
+                backendArtifacts.unload(uri);
                 break;
             case UPDATE:
-                artifacts.update(uri);
+                backendArtifacts.update(uri);
                 break;
         }
     }

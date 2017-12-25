@@ -114,11 +114,8 @@ public class BackendService {
         if (backend.getStorage().isPresent()) {
             Storage storage = backend.getStorage().get();
             try {
-                if (backend.isDirectory(target)) {
-                    if (storage.storeZip(target, is))
-                        return backendArtifacts.update(target).toJson();
-                } else if (storage.store(target, is)) {
-                    return backendArtifacts.update(URIBuilder.from(target).addParentPathFromSource().addPath("/").build()).toJson();
+                if (backend.isDirectory(target) ? storage.storeZip(target, is) : storage.store(target, is)) {
+                    return backendArtifacts.update(target).toJson();
                 }
             } catch (IOException e) {
                 LOGGER.log(Level.SEVERE, "An error occured while creating contents for target " + target, e);

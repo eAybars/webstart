@@ -24,7 +24,7 @@ public class ArtifactCreationSchedulingEventListener implements PathWatchService
 
     @Override
     public boolean test(PathWatchServiceEvent e) {
-        return e.isCreate() && Files.isDirectory(e.getPath());
+        return e.isCreate() && (Files.isDirectory(e.getPath()) || !e.getPath().getFileName().toString().endsWith(".jnlp"));
 
     }
 }

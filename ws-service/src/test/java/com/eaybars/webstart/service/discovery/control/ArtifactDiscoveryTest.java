@@ -9,7 +9,9 @@ import org.junit.Test;
 
 import javax.enterprise.inject.Instance;
 import java.net.URI;
+import java.net.URL;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -81,5 +83,25 @@ public class ArtifactDiscoveryTest {
         assertTrue(artifacts.contains(executable));
         assertTrue(artifacts.contains(new Artifact(path1)));
         assertTrue(artifacts.contains(new Artifact(path1Sub1)));
+    }
+
+    @Test
+    public void applySingleResource() throws Exception {
+        //first test that nothing happens because no resource exists
+        Set<Artifact> artifacts = artifactDiscovery.apply(path1SubSub1).collect(Collectors.toSet());
+        assertTrue(artifacts.isEmpty());
+        verifyZeroInteractions(artifactCreator1);
+        verifyZeroInteractions(artifactCreator2);
+
+        //ensure resource exists
+        when(backend.getResource(path1SubSub1)).thenReturn(new URL("http://somedomain.com/path1/path1Sub1/path1SubSub1.pdf"));
+
+        artifacts = artifactDiscovery.apply(path1SubSub1).collect(Collectors.toSet());
+        assertEquals(Collections.singleton(resource), artifacts);
+
+        verify(artifactCreator1).apply(backend, Collections.singletonList(path1SubSub1));
+        verifyNoMoreInteractions(artifactCreator1);
+        verify(artifactCreator2).apply(backend, Collections.singletonList(path1SubSub1));
+        verifyNoMoreInteractions(artifactCreator2);
     }
 }

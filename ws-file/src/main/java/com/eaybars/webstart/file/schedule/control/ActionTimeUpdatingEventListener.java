@@ -23,7 +23,7 @@ public class ActionTimeUpdatingEventListener implements PathWatchService.EventLi
     public void accept(PathWatchServiceEvent event) {
         Optional<Action> optionalTask = actionScheduler.findParentAction(event.getPath());
         optionalTask.ifPresent(Action::updateLastActionTimeToNow);
-        if (optionalTask.isPresent() && Files.isDirectory(event.getPath())) {
+        if (!optionalTask.isPresent() && Files.isDirectory(event.getPath())) {
             try {
                 event.getService().register(event.getPath());
             } catch (IOException e) {

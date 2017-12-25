@@ -11,10 +11,11 @@ import javax.inject.Inject;
 import java.nio.file.Files;
 
 @ApplicationScoped
-public class ExecutableUpdateSchedulingEventListener implements PathWatchService.EventListener {
+public class ExecutableEventSchedulingEventListener implements PathWatchService.EventListener {
 
     @Inject
     ActionScheduler actionScheduler;
+
 
     @Override
     public void accept(PathWatchServiceEvent event) {
@@ -23,7 +24,7 @@ public class ExecutableUpdateSchedulingEventListener implements PathWatchService
 
     @Override
     public boolean test(PathWatchServiceEvent e) {
-        return !Files.isDirectory(e.getPath()) &&
-                e.getPath().getFileName().toString().endsWith(".jnlp");
+        return !Files.isDirectory(e.getPath()) && e.getPath().getFileName().toString().endsWith(".jnlp");
+
     }
 }

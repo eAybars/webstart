@@ -11,18 +11,18 @@ import javax.inject.Inject;
 import java.nio.file.Files;
 
 @ApplicationScoped
-public class ArtifactRemovalSchedulingEventListener implements PathWatchService.EventListener {
+public class ArtifactUpdateSchedulingEventListener implements PathWatchService.EventListener {
 
     @Inject
     ActionScheduler actionScheduler;
 
     @Override
     public void accept(PathWatchServiceEvent event) {
-        actionScheduler.add(new Action(event.getPath(), ArtifactEvent.Type.UNLOAD));
+        actionScheduler.add(new Action(event.getPath(), ArtifactEvent.Type.UPDATE));
     }
 
     @Override
     public boolean test(PathWatchServiceEvent e) {
-        return e.isDelete() && (Files.isDirectory(e.getPath()) || !e.getPath().getFileName().toString().endsWith(".jnlp"));
+        return e.isModify() && (Files.isDirectory(e.getPath()) || !e.getPath().getFileName().toString().endsWith(".jnlp"));
     }
 }

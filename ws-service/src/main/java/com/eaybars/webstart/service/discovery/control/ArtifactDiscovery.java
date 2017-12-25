@@ -9,6 +9,7 @@ import javax.enterprise.inject.Instance;
 import javax.inject.Inject;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Objects;
@@ -32,7 +33,14 @@ public class ArtifactDiscovery {
 
     public Stream<Artifact> apply(URI uri) {
         if (!backend.isDirectory(uri)) {
-            throw new IllegalArgumentException(uri + " is not a directory");
+            boolean resourceExists = false;
+            try {
+                resourceExists = backend.getResource(uri) != null;
+            } catch (Exception e) {
+            }
+            return resourceExists ? StreamSupport.stream(discoveries.spliterator(), false)
+                    .flatMap(ad -> ad.apply(backend, Collections.singletonList(uri)))
+                    : Stream.empty();
         }
 
         List<Artifact> artifacts = new LinkedList<>();
