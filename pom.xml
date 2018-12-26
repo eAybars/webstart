@@ -13,7 +13,7 @@
         <module>ws-jnlp</module>
         <module>ws-file</module>
         <module>ws-security</module>
-        <module>ws-google-cloud</module>
+        <module>ws-gcs</module>
         <module>ws-app-file</module>
         <module>ws-app-gc</module>
         <module>ws-app-sgc</module>

@@ -15,7 +15,7 @@
     <dependencies>
         <dependency>
             <groupId>com.eaybars</groupId>
-            <artifactId>ws-google-cloud</artifactId>
+            <artifactId>ws-gcs</artifactId>
             <version>1.0</version>
         </dependency>
         <dependency>
